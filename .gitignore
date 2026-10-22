@@ -1,0 +1,14 @@
+# Local databases and uploaded evidence must not be committed
+lototo.db
+*.db
+evidence/
+
+# Secrets and local environments
+.streamlit/secrets.toml
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
