@@ -1,11 +1,14 @@
 
 import streamlit as st
-import sqlite3
+import psycopg2
+from psycopg2 import IntegrityError
+from supabase import create_client
 import json
 import pandas as pd
 import os
 import uuid
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 # ============================================================
 # LOTOTO / LSR 6 - ENERGY ISOLATION SAFETY MANAGEMENT SYSTEM
@@ -28,16 +31,108 @@ st.set_page_config(
     layout="wide"
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(BASE_DIR, "lototo.db")
-EVIDENCE_FOLDER = "evidence"
+# ============================================================
+# SUPABASE CONFIGURATION
+# Local: .streamlit/secrets.toml
+# Streamlit Cloud: App settings -> Secrets
+# Never commit secrets.toml or expose server-side keys.
+# ============================================================
+def read_secret(name, default=None):
+    """Read a setting from Streamlit Secrets, then environment variables."""
+    try:
+        value = st.secrets.get(name, None)
+    except Exception:
+        value = None
+    if value is None or str(value).strip() == "":
+        value = os.getenv(name, default)
+    if value is None:
+        return default
+    return str(value).strip()
 
-os.makedirs(EVIDENCE_FOLDER, exist_ok=True)
+SUPABASE_URL = read_secret("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = read_secret("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_DB_URL = read_secret("SUPABASE_DB_URL")
+SUPABASE_BUCKET = read_secret("SUPABASE_BUCKET", "lototo-evidence")
 
-conn = sqlite3.connect(DB_FILE, check_same_thread=False)
-cursor = conn.cursor()
+missing_settings = [
+    name for name, value in [
+        ("SUPABASE_URL", SUPABASE_URL),
+        ("SUPABASE_SERVICE_ROLE_KEY", SUPABASE_SERVICE_ROLE_KEY),
+        ("SUPABASE_DB_URL", SUPABASE_DB_URL),
+    ] if not value
+]
 
+if missing_settings:
+    st.error(
+        "Konfigurasi Supabase belum lengkap. Periksa .streamlit/secrets.toml "
+        "atau Streamlit Cloud -> Settings -> Secrets. Variabel yang belum ada: "
+        + ", ".join(missing_settings)
+    )
+    st.stop()
 
+# create_client expects the base project URL, e.g. https://xxxx.supabase.co,
+# not the REST endpoint ending in /rest/v1/.
+SUPABASE_URL = SUPABASE_URL.rstrip("/")
+if SUPABASE_URL.endswith("/rest/v1"):
+    SUPABASE_URL = SUPABASE_URL[:-len("/rest/v1")]
+
+@st.cache_resource(show_spinner=False)
+def get_supabase_client(project_url, server_key):
+    """Reuse the Supabase API client across Streamlit reruns."""
+    return create_client(project_url, server_key)
+
+try:
+    supabase = get_supabase_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+except Exception as exc:
+    st.error(
+        "Gagal membuat client Supabase. Periksa SUPABASE_URL dan API key "
+        f"server-side. Detail: {exc}"
+    )
+    st.stop()
+
+# Reuse PostgreSQL connection across Streamlit reruns to avoid a new network
+# handshake on every menu interaction. This simple shared connection is intended
+# for a single-user/demo app; use a proper connection pool for concurrent users.
+@st.cache_resource(show_spinner=False)
+def get_database_connection(database_url):
+    connection = psycopg2.connect(
+        database_url,
+        sslmode="require",
+        connect_timeout=10,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=3,
+    )
+    connection.autocommit = False
+    return connection
+
+# The app uses PostgreSQL SQL queries (psycopg2), so SUPABASE_DB_URL must be
+# the PostgreSQL connection URI from Supabase -> Connect, not the Project URL
+# and not the REST API URL. Its database password is separate from the API key.
+try:
+    conn = get_database_connection(SUPABASE_DB_URL)
+    cursor = conn.cursor()
+except psycopg2.OperationalError as exc:
+    error_text = str(exc).lower()
+    if "password authentication failed" in error_text:
+        st.error(
+            "Password database Supabase ditolak. Perbarui SUPABASE_DB_URL "
+            "menggunakan connection string terbaru dari Supabase -> Connect -> "
+            "Connection string (URI), dengan password PostgreSQL yang benar. "
+            "Password database bukan SUPABASE_SERVICE_ROLE_KEY."
+        )
+    elif "could not translate host name" in error_text or "name or service not known" in error_text:
+        st.error("Host pada SUPABASE_DB_URL tidak valid. Salin ulang connection string URI dari Supabase -> Connect.")
+    elif "timeout" in error_text or "network is unreachable" in error_text:
+        st.error(
+            "Koneksi ke PostgreSQL Supabase gagal karena jaringan/IPv6 atau timeout. "
+            "Coba connection string Session Pooler dari menu Connect di Supabase, "
+            "dan gunakan host, port, serta username persis seperti yang ditampilkan."
+        )
+    else:
+        st.error(f"Gagal terhubung ke PostgreSQL Supabase: {exc}")
+    st.stop()
 
 # ============================================================
 # PTW TYPES & CHECKLIST CONFIGURATION
@@ -131,129 +226,111 @@ PTW_CONFIG = {
 }
 
 # ============================================================
-# DATABASE
+# DATABASE (Supabase PostgreSQL)
+# Run schema checks/migrations once per app process, not on every rerun.
 # ============================================================
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS machines (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    machine_id TEXT UNIQUE,
-    machine_name TEXT NOT NULL,
-    area TEXT,
-    energy_source TEXT,
-    isolation_point TEXT,
-    status TEXT DEFAULT 'AVAILABLE'
-)
-""")
+@st.cache_resource(show_spinner=False)
+def initialize_database(database_url):
+    """Create required tables and add missing columns once per app process."""
+    db_conn = get_database_connection(database_url)
+    db_cursor = db_conn.cursor()
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS machines (
+        id BIGSERIAL PRIMARY KEY,
+        machine_id TEXT UNIQUE,
+        machine_name TEXT NOT NULL,
+        area TEXT,
+        energy_source TEXT,
+        isolation_point TEXT,
+        status TEXT DEFAULT 'AVAILABLE'
+    )
+    """)
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS lototo (
+        id BIGSERIAL PRIMARY KEY,
+        work_order TEXT NOT NULL,
+        machine_id TEXT NOT NULL,
+        technician TEXT NOT NULL,
+        start_time TEXT,
+        end_time TEXT,
+        energy_identified INTEGER DEFAULT 0,
+        parties_notified INTEGER DEFAULT 0,
+        shutdown_isolated INTEGER DEFAULT 0,
+        lock_out INTEGER DEFAULT 0,
+        tag_out INTEGER DEFAULT 0,
+        try_out INTEGER DEFAULT 0,
+        checked_restored INTEGER DEFAULT 0,
+        lock_photo TEXT,
+        tag_photo TEXT,
+        lock_photo_time TEXT,
+        tag_photo_time TEXT,
+        jsa_photo TEXT,
+        dra_photo TEXT,
+        ptw_photo TEXT,
+        ptw_type TEXT,
+        ptw_number TEXT,
+        safety_briefing_photo TEXT,
+        safety_briefing_photo_time TEXT,
+        ptw_checklist_json TEXT,
+        jsa_photo_time TEXT,
+        dra_photo_time TEXT,
+        ptw_photo_time TEXT,
+        end_lock_photo TEXT,
+        end_tag_photo TEXT,
+        end_lock_photo_time TEXT,
+        end_tag_photo_time TEXT,
+        lototo_status TEXT DEFAULT 'NOT STARTED',
+        work_status TEXT DEFAULT 'ACTIVE',
+        end_confirmation INTEGER DEFAULT 0
+    )
+    """)
+    db_conn.commit()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS lototo (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    work_order TEXT NOT NULL,
-    machine_id TEXT NOT NULL,
-    technician TEXT NOT NULL,
-
-    start_time TEXT,
-    end_time TEXT,
-
-    energy_identified INTEGER DEFAULT 0,
-    parties_notified INTEGER DEFAULT 0,
-    shutdown_isolated INTEGER DEFAULT 0,
-    lock_out INTEGER DEFAULT 0,
-    tag_out INTEGER DEFAULT 0,
-    try_out INTEGER DEFAULT 0,
-    checked_restored INTEGER DEFAULT 0,
-
-    lock_photo TEXT,
-    tag_photo TEXT,
-    lock_photo_time TEXT,
-    tag_photo_time TEXT,
-
-    jsa_photo TEXT,
-    dra_photo TEXT,
-    ptw_photo TEXT,
-    ptw_type TEXT,
-    ptw_number TEXT,
-    safety_briefing_photo TEXT,
-    safety_briefing_photo_time TEXT,
-    ptw_checklist_json TEXT,
-    jsa_photo_time TEXT,
-    dra_photo_time TEXT,
-    ptw_photo_time TEXT,
-
-    end_lock_photo TEXT,
-    end_tag_photo TEXT,
-    end_lock_photo_time TEXT,
-    end_tag_photo_time TEXT,
-
-    lototo_status TEXT DEFAULT 'NOT STARTED',
-    work_status TEXT DEFAULT 'ACTIVE',
-
-    end_confirmation INTEGER DEFAULT 0
-)
-""")
-
-conn.commit()
-
-
-# ============================================================
-# DATABASE MIGRATION
-# Makes the application safer to update if an older DB exists.
-# ============================================================
-
-def ensure_column(table, column, definition):
-    columns = [
-        row[1]
-        for row in cursor.execute(
-            f"PRAGMA table_info({table})"
-        ).fetchall()
-    ]
-
-    if column not in columns:
-        cursor.execute(
-            f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+    migration_columns = {
+        "energy_identified": "INTEGER DEFAULT 0",
+        "parties_notified": "INTEGER DEFAULT 0",
+        "shutdown_isolated": "INTEGER DEFAULT 0",
+        "lock_out": "INTEGER DEFAULT 0",
+        "tag_out": "INTEGER DEFAULT 0",
+        "try_out": "INTEGER DEFAULT 0",
+        "checked_restored": "INTEGER DEFAULT 0",
+        "lock_photo": "TEXT", "tag_photo": "TEXT",
+        "lock_photo_time": "TEXT", "tag_photo_time": "TEXT",
+        "jsa_photo": "TEXT", "dra_photo": "TEXT", "ptw_photo": "TEXT",
+        "ptw_type": "TEXT", "ptw_number": "TEXT",
+        "safety_briefing_photo": "TEXT", "safety_briefing_photo_time": "TEXT",
+        "ptw_checklist_json": "TEXT", "jsa_photo_time": "TEXT",
+        "dra_photo_time": "TEXT", "ptw_photo_time": "TEXT",
+        "end_lock_photo": "TEXT", "end_tag_photo": "TEXT",
+        "end_lock_photo_time": "TEXT", "end_tag_photo_time": "TEXT",
+        "lototo_status": "TEXT DEFAULT 'NOT STARTED'",
+        "work_status": "TEXT DEFAULT 'ACTIVE'",
+        "end_confirmation": "INTEGER DEFAULT 0",
+    }
+    for column, definition in migration_columns.items():
+        db_cursor.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = %s AND column_name = %s",
+            ("lototo", column),
         )
-        conn.commit()
+        if db_cursor.fetchone() is None:
+            db_cursor.execute(f'ALTER TABLE "lototo" ADD COLUMN "{column}" {definition}')
+    db_cursor.execute("CREATE INDEX IF NOT EXISTS idx_lototo_work_status ON lototo (work_status)")
+    db_cursor.execute("CREATE INDEX IF NOT EXISTS idx_lototo_start_time ON lototo (start_time DESC)")
+    db_cursor.execute("CREATE INDEX IF NOT EXISTS idx_lototo_end_time ON lototo (end_time DESC)")
+    db_conn.commit()
+    db_cursor.close()
+    return True
 
+try:
+    initialize_database(SUPABASE_DB_URL)
+except Exception as exc:
+    st.error(f"Gagal menyiapkan tabel Supabase: {exc}")
+    st.stop()
 
-migration_columns = {
-    "energy_identified": "INTEGER DEFAULT 0",
-    "parties_notified": "INTEGER DEFAULT 0",
-    "shutdown_isolated": "INTEGER DEFAULT 0",
-    "lock_out": "INTEGER DEFAULT 0",
-    "tag_out": "INTEGER DEFAULT 0",
-    "try_out": "INTEGER DEFAULT 0",
-    "checked_restored": "INTEGER DEFAULT 0",
-    "lock_photo": "TEXT",
-    "tag_photo": "TEXT",
-    "lock_photo_time": "TEXT",
-    "tag_photo_time": "TEXT",
-
-    "jsa_photo": "TEXT",
-    "dra_photo": "TEXT",
-    "ptw_photo": "TEXT",
-    "ptw_type": "TEXT",
-    "ptw_number": "TEXT",
-    "safety_briefing_photo": "TEXT",
-    "safety_briefing_photo_time": "TEXT",
-    "ptw_checklist_json": "TEXT",
-    "jsa_photo_time": "TEXT",
-    "dra_photo_time": "TEXT",
-    "ptw_photo_time": "TEXT",
-
-    "end_lock_photo": "TEXT",
-    "end_tag_photo": "TEXT",
-    "end_lock_photo_time": "TEXT",
-    "end_tag_photo_time": "TEXT",
-
-    "lototo_status": "TEXT DEFAULT 'NOT STARTED'",
-    "work_status": "TEXT DEFAULT 'ACTIVE'",
-    "end_confirmation": "INTEGER DEFAULT 0",
-}
-
-for column, definition in migration_columns.items():
-    ensure_column("lototo", column, definition)
-
+# Create a fresh cursor for this script run. Schema initialization above is cached.
+cursor = conn.cursor()
 
 # ============================================================
 # FUNCTIONS
@@ -330,38 +407,70 @@ def calculate_lototo_status(row):
 
 
 def save_uploaded_file(uploaded_file, work_order, evidence_type):
+    """Upload evidence to persistent Supabase Storage and return its object path."""
     if uploaded_file is None:
         return None
-
     extension = os.path.splitext(uploaded_file.name)[1].lower()
+    unique_id = uuid.uuid4().hex[:12]
+    safe_work_order = "".join(c if c.isalnum() or c in "-_" else "_" for c in work_order)
+    filename = f"{safe_work_order}_{evidence_type}_{unique_id}{extension}"
+    object_path = f"{datetime.now().strftime('%Y/%m')}/{filename}"
+    content_type = getattr(uploaded_file, "type", None) or "application/octet-stream"
+    try:
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            object_path,
+            uploaded_file.getvalue(),
+            {"content-type": content_type, "upsert": "false"}
+        )
+    except Exception as exc:
+        st.error(f"Gagal mengunggah evidence ke Supabase Storage: {exc}")
+        raise
+    return object_path
 
-    unique_id = uuid.uuid4().hex[:8]
 
-    safe_work_order = "".join(
-        c if c.isalnum() or c in "-_" else "_"
-        for c in work_order
-    )
+def save_uploaded_files_parallel(items, work_order, max_workers=4):
+    """Upload independent evidence files concurrently to reduce network wait.
 
-    filename = (
-        f"{safe_work_order}_"
-        f"{evidence_type}_"
-        f"{unique_id}"
-        f"{extension}"
-    )
+    items is a sequence of (evidence_type, uploaded_file) pairs. Returns a
+    dict mapping each evidence_type to its Supabase Storage object path.
+    If any upload fails, the exception is raised so the LOTOTO record is not
+    inserted/updated as if all required evidence had been saved successfully.
+    """
+    items = [(kind, file_obj) for kind, file_obj in items if file_obj is not None]
+    if not items:
+        return {}
 
-    filepath = os.path.join(
-        EVIDENCE_FOLDER,
-        filename
-    )
-
-    with open(filepath, "wb") as file:
-        file.write(uploaded_file.getbuffer())
-
-    return filepath
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(items))) as executor:
+        futures = {
+            kind: executor.submit(save_uploaded_file, file_obj, work_order, kind)
+            for kind, file_obj in items
+        }
+        # Resolve all results; propagate errors to the caller.
+        return {kind: future.result() for kind, future in futures.items()}
 
 
 def evidence_exists(path):
-    return bool(path) and os.path.exists(path)
+    # Database stores the object path, not a local filesystem path.
+    return isinstance(path, str) and bool(path.strip())
+
+
+def evidence_url(path):
+    """Create a short-lived URL for a private evidence object."""
+    if not evidence_exists(path):
+        return None
+    try:
+        result = supabase.storage.from_(SUPABASE_BUCKET).create_signed_url(path, 3600)
+        return result.get("signedURL") or result.get("signedUrl")
+    except Exception:
+        return None
+
+
+def show_evidence(path, width=400, caption=None):
+    url = evidence_url(path)
+    if url:
+        st.image(url, width=width, caption=caption)
+    else:
+        st.info("Bukti foto tidak tersedia atau gagal diakses.")
 
 
 def duration_between(start_time, end_time):
@@ -415,7 +524,7 @@ if detail_page == "detail" and detail_id:
             """
             SELECT *
             FROM lototo
-            WHERE id = ?
+            WHERE id = %s
             """,
             conn,
             params=(detail_id,)
@@ -487,7 +596,7 @@ if detail_page == "detail" and detail_id:
             with c1:
                 st.write("🔒 Lock Out")
                 if evidence_exists(selected["lock_photo"]):
-                    st.image(selected["lock_photo"], width=400)
+                    show_evidence(selected["lock_photo"], width=400)
                     st.caption(
                         f"Evidence time: {selected['lock_photo_time']}"
                     )
@@ -497,7 +606,7 @@ if detail_page == "detail" and detail_id:
             with c2:
                 st.write("🏷️ Tag Out")
                 if evidence_exists(selected["tag_photo"]):
-                    st.image(selected["tag_photo"], width=400)
+                    show_evidence(selected["tag_photo"], width=400)
                     st.caption(
                         f"Evidence time: {selected['tag_photo_time']}"
                     )
@@ -519,7 +628,7 @@ if detail_page == "detail" and detail_id:
                 with column:
                     st.write(f"**{label}**")
                     if evidence_exists(selected[field]):
-                        st.image(selected[field], width=260)
+                        show_evidence(selected[field], width=260)
                         st.caption(f"Evidence time: {selected[time_field]}")
                     else:
                         st.info("Tidak tersedia.")
@@ -532,7 +641,7 @@ if detail_page == "detail" and detail_id:
 
             if evidence_exists(selected["safety_briefing_photo"]):
                 st.write("**📷 Bukti Safety Briefing**")
-                st.image(selected["safety_briefing_photo"], width=450)
+                show_evidence(selected["safety_briefing_photo"], width=450)
                 st.caption(f"Evidence time: {selected['safety_briefing_photo_time']}")
             else:
                 st.info("Bukti Safety Briefing tidak tersedia.")
@@ -546,7 +655,7 @@ if detail_page == "detail" and detail_id:
             with c1:
                 st.write("🔒 End Lock Out")
                 if evidence_exists(selected["end_lock_photo"]):
-                    st.image(selected["end_lock_photo"], width=400)
+                    show_evidence(selected["end_lock_photo"], width=400)
                     st.caption(
                         f"Evidence time: {selected['end_lock_photo_time']}"
                     )
@@ -556,7 +665,7 @@ if detail_page == "detail" and detail_id:
             with c2:
                 st.write("🏷️ End Tag Out")
                 if evidence_exists(selected["end_tag_photo"]):
-                    st.image(selected["end_tag_photo"], width=400)
+                    show_evidence(selected["end_tag_photo"], width=400)
                     st.caption(
                         f"Evidence time: {selected['end_tag_photo_time']}"
                     )
@@ -619,32 +728,31 @@ if detail_page == "detail" and detail_id:
                     else:
                         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                        end_lock_path = save_uploaded_file(
-                            end_lock_photo,
+                        end_evidence_paths = save_uploaded_files_parallel(
+                            [
+                                ("END_LOCK", end_lock_photo),
+                                ("END_TAG", end_tag_photo),
+                            ],
                             selected["work_order"],
-                            "END_LOCK"
+                            max_workers=2,
                         )
-
-                        end_tag_path = save_uploaded_file(
-                            end_tag_photo,
-                            selected["work_order"],
-                            "END_TAG"
-                        )
+                        end_lock_path = end_evidence_paths["END_LOCK"]
+                        end_tag_path = end_evidence_paths["END_TAG"]
 
                         cursor.execute(
                             """
                             UPDATE lototo
                             SET
-                                end_time = ?,
+                                end_time = %s,
                                 checked_restored = 1,
                                 end_confirmation = 1,
-                                end_lock_photo = ?,
-                                end_tag_photo = ?,
-                                end_lock_photo_time = ?,
-                                end_tag_photo_time = ?,
+                                end_lock_photo = %s,
+                                end_tag_photo = %s,
+                                end_lock_photo_time = %s,
+                                end_tag_photo_time = %s,
                                 lototo_status = 'LSR 6 COMPLETE',
                                 work_status = 'COMPLETED'
-                            WHERE id = ?
+                            WHERE id = %s
                             """,
                             (
                                 end_time,
@@ -824,7 +932,7 @@ elif menu == "Data Mesin":
                             isolation_point,
                             status
                         )
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         """,
                         (
                             machine_id,
@@ -842,7 +950,8 @@ elif menu == "Data Mesin":
                         "Data mesin berhasil ditambahkan."
                     )
 
-                except sqlite3.IntegrityError:
+                except IntegrityError:
+                    conn.rollback()
                     st.error(
                         "ID mesin sudah terdaftar."
                     )
@@ -1167,15 +1276,17 @@ elif menu == "Start LOTOTO":
                     )
 
                 # Check whether machine is already active
-                active_machine = cursor.execute(
+                cursor.execute(
                     """
                     SELECT id
                     FROM lototo
-                    WHERE machine_id = ?
+                    WHERE machine_id = %s
                     AND work_status = 'ACTIVE'
+                    LIMIT 1
                     """,
                     (selected_machine,)
-                ).fetchone()
+                )
+                active_machine = cursor.fetchone()
 
                 if active_machine:
                     errors.append(
@@ -1198,42 +1309,26 @@ elif menu == "Start LOTOTO":
                         "%Y-%m-%d %H:%M:%S"
                     )
 
-                    # Save evidence
-                    lock_path = save_uploaded_file(
-                        lock_photo,
+                    # Upload independent evidence files concurrently. This is
+                    # usually the main source of Start LOTOTO network delay.
+                    evidence_paths = save_uploaded_files_parallel(
+                        [
+                            ("LOCK", lock_photo),
+                            ("TAG", tag_photo),
+                            ("JSA", jsa_photo),
+                            ("DRA", dra_photo),
+                            ("PTW", ptw_photo),
+                            ("SAFETY_BRIEFING", safety_briefing_photo),
+                        ],
                         work_order,
-                        "LOCK"
+                        max_workers=4,
                     )
-
-                    tag_path = save_uploaded_file(
-                        tag_photo,
-                        work_order,
-                        "TAG"
-                    )
-
-                    jsa_path = save_uploaded_file(
-                        jsa_photo,
-                        work_order,
-                        "JSA"
-                    )
-
-                    dra_path = save_uploaded_file(
-                        dra_photo,
-                        work_order,
-                        "DRA"
-                    )
-
-                    ptw_path = save_uploaded_file(
-                        ptw_photo,
-                        work_order,
-                        "PTW"
-                    )
-
-                    safety_briefing_path = save_uploaded_file(
-                        safety_briefing_photo,
-                        work_order,
-                        "SAFETY_BRIEFING"
-                    )
+                    lock_path = evidence_paths["LOCK"]
+                    tag_path = evidence_paths["TAG"]
+                    jsa_path = evidence_paths["JSA"]
+                    dra_path = evidence_paths["DRA"]
+                    ptw_path = evidence_paths["PTW"]
+                    safety_briefing_path = evidence_paths["SAFETY_BRIEFING"]
 
                     ptw_checklist_json = json.dumps(
                         {
@@ -1304,7 +1399,7 @@ elif menu == "Start LOTOTO":
                             work_status
                         )
                         VALUES (
-                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                         )
                         """,
                         (
