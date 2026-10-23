@@ -638,13 +638,8 @@ if detail_page == "detail" and detail_id:
             st.subheader("📄 PTW & Safety Briefing")
             st.write(f"**Jenis PTW:** {selected['ptw_type'] or '-'}")
             st.write(f"**Nomor PTW:** {selected['ptw_number'] or '-'}")
-
-            if evidence_exists(selected["safety_briefing_photo"]):
-                st.write("**📷 Bukti Safety Briefing**")
-                show_evidence(selected["safety_briefing_photo"], width=450)
-                st.caption(f"Evidence time: {selected['safety_briefing_photo_time']}")
-            else:
-                st.info("Bukti Safety Briefing tidak tersedia.")
+            # Foto PTW dan Safety Briefing sudah ditampilkan pada bagian Start Evidence.
+            # Bagian ini hanya menampilkan informasi PTW agar foto tidak duplikat.
 
             st.divider()
 
