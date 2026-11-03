@@ -484,6 +484,76 @@ def duration_between(start_time, end_time):
 
 
 # ============================================================
+# EQUIPMENT MATRIX (temporary seed from the visible Working rows in
+# the supplied image; expand when the complete matrix is provided)
+# ============================================================
+LOTOTO_MATRIX_COLUMNS = [
+    "Bucket Elevator Line 1", "Vibrating Conveyor Line 1", "Throttle Valve",
+    "Bag Applicator", "Rotary Feeder Line 1", "Chain Conveyor",
+    "Rotary Screen", "Small Bag Filter 1", "Small Bag Filter Fan 1",
+    "Small Bag Filter 2", "Small Bag Filter Fan 2", "Packer Machine 1",
+    "Belt Conveyor 1", "Belt Bag Cleaner", "Belt Conveyor 2",
+    "Belt Check Weight", "Belt Reject", "Belt Conveyor 3",
+    "Belt Conveyor 1 - Diverter", "Belt Conveyor 4", "Gravity Roller",
+    "Palletizer 1", "Roller Curve to Palletizer 3",
+]
+# Visible Working rows and V marks transcribed from the image.
+WORKING_TO_LOTOTO = {
+    "N6021BE01": ["Bucket Elevator Line 1", "Vibrating Conveyor Line 1", "Chain Conveyor"],
+    "N6021VC01": ["Bucket Elevator Line 1", "Vibrating Conveyor Line 1"],
+    "N6021SG01": ["Vibrating Conveyor Line 1", "Throttle Valve", "Rotary Feeder Line 1"],
+    "N6021BA01": ["Bag Applicator"],
+    "N6021RA01": ["Throttle Valve", "Rotary Feeder Line 1", "Packer Machine 1"],
+}
+
+# Equipment for Working rows visible in the user's image. These records are
+# inserted into Supabase automatically so Start LOTOTO can be used immediately.
+# Energy source and isolation point are intentionally marked for field verification
+# because the supplied image does not specify those details.
+WORKING_EQUIPMENT_CATALOG = [
+    {"machine_id": "N6021BE01", "machine_name": "BUCKET ELEVATOR LINE 1", "points": 3},
+    {"machine_id": "N6021VC01", "machine_name": "VIBRATING CONVEYOR LINE 1", "points": 2},
+    {"machine_id": "N6021SG01", "machine_name": "THROTTLE VALVE", "points": 3},
+    {"machine_id": "N6021BA01", "machine_name": "BAG APPLICATOR", "points": 1},
+    {"machine_id": "N6021RA01", "machine_name": "ROTARY FEEDER LINE 1", "points": 3},
+]
+
+
+def seed_working_equipment():
+    """Populate the machines table from the visible Working equipment catalog.
+
+    ON CONFLICT DO NOTHING preserves existing machine records and user data.
+    """
+    seed_cursor = conn.cursor()
+    for item in WORKING_EQUIPMENT_CATALOG:
+        seed_cursor.execute(
+            """
+            INSERT INTO public.machines
+                (machine_id, machine_name, area, energy_source, isolation_point, status)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (machine_id) DO NOTHING
+            """,
+            (
+                item["machine_id"],
+                item["machine_name"],
+                "Production",
+                "Perlu verifikasi lapangan",
+                "Mengacu LOTOTO Matrix; verifikasi titik isolasi di lapangan",
+                "AVAILABLE",
+            ),
+        )
+    conn.commit()
+    seed_cursor.close()
+
+
+try:
+    seed_working_equipment()
+except Exception as exc:
+    conn.rollback()
+    st.error(f"Gagal memuat data Equipment for Working otomatis: {exc}")
+    st.stop()
+
+# ============================================================
 # HEADER
 # ============================================================
 
@@ -496,6 +566,7 @@ menu = st.sidebar.selectbox(
         "Dashboard",
         "Data Mesin",
         "Start LOTOTO",
+        "LOTOTO Matrix",
         "Active LOTOTO",
         "End LOTOTO",
         "History"
@@ -869,112 +940,94 @@ if menu == "Dashboard":
 elif menu == "Data Mesin":
 
     st.title("🏭 Data Mesin")
-
-    with st.form("machine_form"):
-
-        machine_id = st.text_input(
-            "ID Mesin",
-            placeholder="Contoh: CV-001"
-        )
-
-        machine_name = st.text_input(
-            "Nama Mesin",
-            placeholder="Contoh: Conveyor 1"
-        )
-
-        area = st.text_input(
-            "Area / Departemen"
-        )
-
-        energy = st.multiselect(
-            "Sumber Energi",
-            [
-                "Electrical",
-                "Mechanical",
-                "Hydraulic",
-                "Pneumatic",
-                "Thermal",
-                "Chemical",
-                "Gravity"
-            ]
-        )
-
-        isolation = st.text_input(
-            "Isolation Point",
-            placeholder="Contoh: MCC Panel 01 / Valve HV-01"
-        )
-
-        submitted = st.form_submit_button(
-            "➕ Tambah Mesin"
-        )
-
-        if submitted:
-
-            if not machine_id or not machine_name:
-                st.error(
-                    "ID Mesin dan Nama Mesin wajib diisi."
-                )
-            else:
-                try:
-                    cursor.execute(
-                        """
-                        INSERT INTO machines
-                        (
-                            machine_id,
-                            machine_name,
-                            area,
-                            energy_source,
-                            isolation_point,
-                            status
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                        """,
-                        (
-                            machine_id,
-                            machine_name,
-                            area,
-                            ", ".join(energy),
-                            isolation,
-                            "AVAILABLE"
-                        )
-                    )
-
-                    conn.commit()
-
-                    st.success(
-                        "Data mesin berhasil ditambahkan."
-                    )
-
-                except IntegrityError:
-                    conn.rollback()
-                    st.error(
-                        "ID mesin sudah terdaftar."
-                    )
-
-    st.divider()
-
-    st.subheader("📋 Daftar Mesin")
+    st.caption(
+        "Data Equipment for Working dimuat otomatis berdasarkan gambar matriks "
+        "yang diberikan. Tidak perlu menambahkan mesin satu per satu."
+    )
 
     machines = get_machines()
+    st.subheader("🟨 Equipment for Working")
+    working_catalog = pd.DataFrame(WORKING_EQUIPMENT_CATALOG).rename(columns={
+        "machine_id": "Equipment ID",
+        "machine_name": "Equipment for Working",
+        "points": "Jumlah titik Tag & Padlock",
+    })
+    st.dataframe(working_catalog, use_container_width=True, hide_index=True)
 
-    if len(machines):
+    st.caption(
+        "Daftar di atas juga otomatis dimasukkan ke database Supabase pada "
+        "tabel machines, sehingga langsung tersedia pada pilihan mesin di Start LOTOTO."
+    )
+
+    st.divider()
+    st.subheader("📋 Data Mesin yang Tersedia untuk Start LOTOTO")
+    if not machines.empty:
         st.dataframe(
-            machines,
-            use_container_width=True
+            machines[["machine_id", "machine_name", "area", "energy_source", "isolation_point", "status"]],
+            use_container_width=True,
+            hide_index=True,
         )
     else:
-        st.info("Belum ada data mesin.")
+        st.warning("Data Equipment for Working belum berhasil dimuat.")
+
+    st.divider()
+    st.subheader("🟨 Equipment for LOTOTO — Mapping")
+    st.caption(
+        "Matriks ini digunakan otomatis saat mesin Equipment for Working dipilih "
+        "pada Start LOTOTO. Pemetaan sementara mengikuti tanda yang terlihat "
+        "pada gambar sumber."
+    )
+    lototo_catalog_rows = []
+    for working_id, lototo_equipment in WORKING_TO_LOTOTO.items():
+        catalog_item = next(
+            (item for item in WORKING_EQUIPMENT_CATALOG if item["machine_id"] == working_id),
+            None,
+        )
+        working_name = catalog_item["machine_name"] if catalog_item else working_id
+        row = {
+            "Equipment for Working": f"{working_id} — {working_name}",
+            "Jumlah titik Tag & Padlock": catalog_item["points"] if catalog_item else "-",
+        }
+        for equipment_name in LOTOTO_MATRIX_COLUMNS:
+            row[equipment_name] = "✓" if equipment_name in lototo_equipment else ""
+        lototo_catalog_rows.append(row)
+    st.dataframe(
+        pd.DataFrame(lototo_catalog_rows),
+        use_container_width=True,
+        hide_index=True,
+    )
 
 
 # ============================================================
 # START LOTOTO
 # ============================================================
 
+elif menu == "LOTOTO Matrix":
+
+    st.title("🟨 LOTOTO Matrix")
+    st.caption(
+        "Matriks indikasi equipment LOTOTO berdasarkan Equipment for Working. "
+        "Data ini sementara ditranskripsikan dari baris yang terlihat pada gambar."
+    )
+    matrix_rows = []
+    for machine_id, equipment_list in WORKING_TO_LOTOTO.items():
+        row = {"Equipment for Working (Machine ID)": machine_id}
+        row["Jumlah titik (terlihat pada gambar)"] = len(equipment_list)
+        for equipment in LOTOTO_MATRIX_COLUMNS:
+            row[equipment] = "✓" if equipment in equipment_list else ""
+        matrix_rows.append(row)
+    st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
+    st.info(
+        "Catatan: matriks lengkap LOTOTO belum tersedia. Pemetaan saat ini "
+        "hanya untuk 5 baris Working yang terlihat pada gambar sumber."
+    )
+
 elif menu == "Start LOTOTO":
 
     st.title("▶️ Start LOTOTO")
     st.caption(
-        "Penerapan LSR 6 - Isolasi Energi"
+        "Penerapan LSR 6 - Isolasi Energi. Pilihan mesin Equipment for Working "
+        "sudah dimuat otomatis dari gambar dan tidak perlu diinput manual."
     )
 
     machines = get_machines()
@@ -982,7 +1035,8 @@ elif menu == "Start LOTOTO":
     if len(machines) == 0:
 
         st.warning(
-            "Tambahkan data mesin terlebih dahulu."
+            "Data Equipment for Working belum tersedia. Muat ulang aplikasi "
+            "setelah proses pemuatan otomatis Supabase berhasil."
         )
 
     else:
@@ -1200,50 +1254,33 @@ elif menu == "Start LOTOTO":
             )
 
             # ------------------------------------------------
-            # EQUIPMENT FOR LOTOTO - CHECKLIST WAJIB
+            # LOTOTO MATRIX - AUTO INDICATION FROM WORKING MACHINE
             # ------------------------------------------------
-
-            st.subheader("🟨 Equipment for LOTOTO")
-            st.caption(
-                "Beri tanda pada equipment yang benar-benar dilakukan " 
-                "isolasi/LOTOTO untuk pekerjaan ini. Minimal satu equipment wajib dipilih."
-            )
-
-            lototo_equipment_items = [
-                "Bucket Elevator Line 1",
-                "Vibrating Conveyor Line 1",
-                "Throttle Valve",
-                "Bag Applicator",
-                "Rotary Feeder Line 1",
-                "Chain Conveyor",
-                "Rotary Screen",
-                "Small Bag Filter 1",
-                "Small Bag Filter Fan 1",
-                "Small Bag Filter 2",
-                "Small Bag Filter Fan 2",
-                "Packer Machine 1",
-                "Belt Conveyor 1",
-                "Belt Bag Cleaner",
-                "Belt Conveyor 2",
-                "Belt Check Weight",
-                "Belt Reject",
-                "Belt Conveyor 3",
-                "Belt Conveyor 1 - Diverter",
-                "Belt Conveyor 4",
-                "Gravity Roller",
-                "Palletizer 1",
-                "Roller Curve to Palletizer 3",
-            ]
-
-            lototo_equipment_selected = []
-            equipment_columns = st.columns(3)
-            for equipment_index, equipment_name in enumerate(lototo_equipment_items):
-                with equipment_columns[equipment_index % 3]:
-                    if st.checkbox(
-                        equipment_name,
-                        key=f"lototo_equipment_{equipment_index}"
-                    ):
-                        lototo_equipment_selected.append(equipment_name)
+            st.subheader("🟨 Equipment for LOTOTO — Checklist otomatis")
+            mapped_equipment = WORKING_TO_LOTOTO.get(str(selected_machine), [])
+            if mapped_equipment:
+                st.caption(
+                    "Pemilihan Equipment for Working secara otomatis mencentang "
+                    "Equipment for LOTOTO yang terhubung pada matriks. "
+                    "Verifikasi kesesuaian fisik sebelum memulai LOTOTO."
+                )
+                matrix_check_columns = st.columns(3)
+                lototo_equipment_selected = []
+                for equipment_index, equipment_name in enumerate(mapped_equipment):
+                    with matrix_check_columns[equipment_index % 3]:
+                        checked = st.checkbox(
+                            equipment_name,
+                            value=True,
+                            key=f"mapped_lototo_equipment_{selected_machine}_{equipment_index}"
+                        )
+                        if checked:
+                            lototo_equipment_selected.append(equipment_name)
+            else:
+                lototo_equipment_selected = []
+                st.warning(
+                    "Belum ada mapping LOTOTO Matrix untuk mesin ini. "
+                    "Start LOTOTO tidak dapat dilanjutkan sampai matriks dilengkapi."
+                )
 
             # ------------------------------------------------
             # START
@@ -1318,7 +1355,7 @@ elif menu == "Start LOTOTO":
 
                 if not lototo_equipment_selected:
                     errors.append(
-                        "Checklist Equipment for LOTOTO wajib dipilih minimal satu."
+                        "Checklist LOTOTO Matrix wajib diverifikasi dan minimal satu equipment dipilih."
                     )
 
                 # Check whether machine is already active
