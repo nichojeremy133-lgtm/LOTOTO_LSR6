@@ -1200,6 +1200,52 @@ elif menu == "Start LOTOTO":
             )
 
             # ------------------------------------------------
+            # EQUIPMENT FOR LOTOTO - CHECKLIST WAJIB
+            # ------------------------------------------------
+
+            st.subheader("🟨 Equipment for LOTOTO")
+            st.caption(
+                "Beri tanda pada equipment yang benar-benar dilakukan " 
+                "isolasi/LOTOTO untuk pekerjaan ini. Minimal satu equipment wajib dipilih."
+            )
+
+            lototo_equipment_items = [
+                "Bucket Elevator Line 1",
+                "Vibrating Conveyor Line 1",
+                "Throttle Valve",
+                "Bag Applicator",
+                "Rotary Feeder Line 1",
+                "Chain Conveyor",
+                "Rotary Screen",
+                "Small Bag Filter 1",
+                "Small Bag Filter Fan 1",
+                "Small Bag Filter 2",
+                "Small Bag Filter Fan 2",
+                "Packer Machine 1",
+                "Belt Conveyor 1",
+                "Belt Bag Cleaner",
+                "Belt Conveyor 2",
+                "Belt Check Weight",
+                "Belt Reject",
+                "Belt Conveyor 3",
+                "Belt Conveyor 1 - Diverter",
+                "Belt Conveyor 4",
+                "Gravity Roller",
+                "Palletizer 1",
+                "Roller Curve to Palletizer 3",
+            ]
+
+            lototo_equipment_selected = []
+            equipment_columns = st.columns(3)
+            for equipment_index, equipment_name in enumerate(lototo_equipment_items):
+                with equipment_columns[equipment_index % 3]:
+                    if st.checkbox(
+                        equipment_name,
+                        key=f"lototo_equipment_{equipment_index}"
+                    ):
+                        lototo_equipment_selected.append(equipment_name)
+
+            # ------------------------------------------------
             # START
             # ------------------------------------------------
 
@@ -1268,6 +1314,11 @@ elif menu == "Start LOTOTO":
                 if not try_out:
                     errors.append(
                         "LSR 6 Step 6 Try Out belum diverifikasi."
+                    )
+
+                if not lototo_equipment_selected:
+                    errors.append(
+                        "Checklist Equipment for LOTOTO wajib dipilih minimal satu."
                     )
 
                 # Check whether machine is already active
