@@ -1006,20 +1006,31 @@ elif menu == "LOTOTO Matrix":
 
     st.title("🟨 LOTOTO Matrix")
     st.caption(
-        "Matriks indikasi equipment LOTOTO berdasarkan Equipment for Working. "
-        "Data ini sementara ditranskripsikan dari baris yang terlihat pada gambar."
+        "Equipment for LOTOTO dikelompokkan per Equipment for Working. "
+        "Buka grup mesin untuk melihat equipment LOTOTO yang otomatis terindikasi (✓)."
     )
-    matrix_rows = []
-    for machine_id, equipment_list in WORKING_TO_LOTOTO.items():
-        row = {"Equipment for Working (Machine ID)": machine_id}
-        row["Jumlah titik (terlihat pada gambar)"] = len(equipment_list)
-        for equipment in LOTOTO_MATRIX_COLUMNS:
-            row[equipment] = "✓" if equipment in equipment_list else ""
-        matrix_rows.append(row)
-    st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
+    # Each Working machine has its own collapsible group so the user does not
+    # need to horizontally scroll a wide matrix table.
+    for item in WORKING_EQUIPMENT_CATALOG:
+        machine_id = item["machine_id"]
+        machine_name = item["machine_name"]
+        equipment_list = WORKING_TO_LOTOTO.get(machine_id, [])
+        with st.expander(f"🏭 {machine_name}  |  {machine_id}", expanded=False):
+            st.write(f"**Jumlah titik Tag & Padlock:** {item['points']}")
+            if equipment_list:
+                for equipment in LOTOTO_MATRIX_COLUMNS:
+                    if equipment in equipment_list:
+                        st.checkbox(
+                            equipment,
+                            value=True,
+                            disabled=True,
+                            key=f"matrix_view_{machine_id}_{equipment}"
+                        )
+            else:
+                st.warning("Mapping Equipment for LOTOTO belum tersedia untuk mesin ini.")
     st.info(
-        "Catatan: matriks lengkap LOTOTO belum tersedia. Pemetaan saat ini "
-        "hanya untuk 5 baris Working yang terlihat pada gambar sumber."
+        "Catatan: pemetaan sementara hanya mencakup 5 baris Working yang terlihat "
+        "pada gambar sumber. Mohon verifikasi matriks lengkap sebelum penggunaan operasional."
     )
 
 elif menu == "Start LOTOTO":
@@ -1053,13 +1064,19 @@ elif menu == "Start LOTOTO":
                 placeholder="Contoh: WO-001"
             )
 
-            machine_options = machines[
-                "machine_id"
-            ].tolist()
+            # Keep the database machine_id as the selectbox value, but display
+            # the Equipment for Working machine name to the operator.
+            machine_options = machines["machine_id"].tolist()
+            machine_name_by_id = dict(
+                zip(machines["machine_id"].astype(str), machines["machine_name"].astype(str))
+            )
 
             selected_machine = st.selectbox(
-                "Pilih Mesin",
-                machine_options
+                "Pilih Equipment for Working",
+                machine_options,
+                format_func=lambda machine_id: machine_name_by_id.get(
+                    str(machine_id), str(machine_id)
+                ),
             )
 
             technician = st.text_input(
@@ -1256,13 +1273,16 @@ elif menu == "Start LOTOTO":
             # ------------------------------------------------
             # LOTOTO MATRIX - AUTO INDICATION FROM WORKING MACHINE
             # ------------------------------------------------
-            st.subheader("🟨 Equipment for LOTOTO — Checklist otomatis")
+            selected_working_name = machine_name_by_id.get(
+                str(selected_machine), str(selected_machine)
+            )
+            st.subheader(f"🟨 LOTOTO Matrix — {selected_working_name}")
             mapped_equipment = WORKING_TO_LOTOTO.get(str(selected_machine), [])
             if mapped_equipment:
                 st.caption(
-                    "Pemilihan Equipment for Working secara otomatis mencentang "
-                    "Equipment for LOTOTO yang terhubung pada matriks. "
-                    "Verifikasi kesesuaian fisik sebelum memulai LOTOTO."
+                    "Equipment for LOTOTO berikut otomatis tercentang berdasarkan " 
+                    "mesin Equipment for Working yang dipilih. Verifikasi kesesuaian "
+                    "fisik sebelum memulai LOTOTO."
                 )
                 matrix_check_columns = st.columns(3)
                 lototo_equipment_selected = []
