@@ -1271,36 +1271,14 @@ elif menu == "Start LOTOTO":
             )
 
             # ------------------------------------------------
-            # LOTOTO MATRIX - AUTO INDICATION FROM WORKING MACHINE
-            # ------------------------------------------------
+            # LOTOTO MATRIX - AUTOMATIC SELECTION IN BACKGROUND
+            # Based on selected Equipment for Working. The separate Matrix
+            # page remains available for viewing; no duplicate checkboxes here.
             selected_working_name = machine_name_by_id.get(
                 str(selected_machine), str(selected_machine)
             )
-            st.subheader(f"🟨 LOTOTO Matrix — {selected_working_name}")
             mapped_equipment = WORKING_TO_LOTOTO.get(str(selected_machine), [])
-            if mapped_equipment:
-                st.caption(
-                    "Equipment for LOTOTO berikut otomatis tercentang berdasarkan " 
-                    "mesin Equipment for Working yang dipilih. Verifikasi kesesuaian "
-                    "fisik sebelum memulai LOTOTO."
-                )
-                matrix_check_columns = st.columns(3)
-                lototo_equipment_selected = []
-                for equipment_index, equipment_name in enumerate(mapped_equipment):
-                    with matrix_check_columns[equipment_index % 3]:
-                        checked = st.checkbox(
-                            equipment_name,
-                            value=True,
-                            key=f"mapped_lototo_equipment_{selected_machine}_{equipment_index}"
-                        )
-                        if checked:
-                            lototo_equipment_selected.append(equipment_name)
-            else:
-                lototo_equipment_selected = []
-                st.warning(
-                    "Belum ada mapping LOTOTO Matrix untuk mesin ini. "
-                    "Start LOTOTO tidak dapat dilanjutkan sampai matriks dilengkapi."
-                )
+            lototo_equipment_selected = list(mapped_equipment)
 
             # ------------------------------------------------
             # START
@@ -1375,7 +1353,7 @@ elif menu == "Start LOTOTO":
 
                 if not lototo_equipment_selected:
                     errors.append(
-                        "Checklist LOTOTO Matrix wajib diverifikasi dan minimal satu equipment dipilih."
+                        "Belum ada mapping Equipment for LOTOTO untuk mesin Working ini. LOTOTO Matrix perlu dilengkapi terlebih dahulu."
                     )
 
                 # Check whether machine is already active
