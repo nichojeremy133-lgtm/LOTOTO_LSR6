@@ -1555,6 +1555,11 @@ elif menu == "Active LOTOTO":
     if len(active) == 0:
         st.success("Tidak ada pekerjaan LOTOTO yang sedang aktif.")
     else:
+        machine_catalog = get_machines()
+        machine_name_by_id = {
+            str(row["machine_id"]): row["machine_name"]
+            for _, row in machine_catalog.iterrows()
+        }
         display = active[[
             "id", "work_order", "machine_id", "technician",
             "ptw_type", "ptw_number", "start_time",
@@ -1564,6 +1569,10 @@ elif menu == "Active LOTOTO":
         display["Work Order"] = display["id"].apply(
             lambda x: f"?page=detail&id={x}"
         )
+
+        display["machine_id"] = display["machine_id"].astype(str).map(
+            machine_name_by_id
+        ).fillna(display["machine_id"].astype(str))
 
         display = display[[
             "id", "Work Order", "machine_id", "technician",
@@ -1603,6 +1612,11 @@ elif menu == "End LOTOTO":
     if len(active) == 0:
         st.info("Tidak ada LOTOTO yang sedang aktif untuk diakhiri.")
     else:
+        machine_catalog = get_machines()
+        machine_name_by_id = {
+            str(row["machine_id"]): row["machine_name"]
+            for _, row in machine_catalog.iterrows()
+        }
         display = active[[
             "id", "work_order", "machine_id", "technician",
             "ptw_type", "ptw_number", "start_time",
@@ -1612,6 +1626,10 @@ elif menu == "End LOTOTO":
         display["Work Order"] = display["id"].apply(
             lambda x: f"?page=detail&id={x}"
         )
+
+        display["machine_id"] = display["machine_id"].astype(str).map(
+            machine_name_by_id
+        ).fillna(display["machine_id"].astype(str))
 
         display = display[[
             "id", "Work Order", "machine_id", "technician",
@@ -1665,6 +1683,12 @@ elif menu == "History":
             axis=1
         )
 
+        machine_catalog = get_machines()
+        machine_name_by_id = {
+            str(row["machine_id"]): row["machine_name"]
+            for _, row in machine_catalog.iterrows()
+        }
+
         display = history_display[
             [
                 "id",
@@ -1679,6 +1703,10 @@ elif menu == "History":
                 "lototo_status"
             ]
         ].copy()
+
+        display["machine_id"] = display["machine_id"].astype(str).map(
+            machine_name_by_id
+        ).fillna(display["machine_id"].astype(str))
 
         display["Work Order"] = display["id"].apply(
             lambda x: f"?page=detail&id={x}"
