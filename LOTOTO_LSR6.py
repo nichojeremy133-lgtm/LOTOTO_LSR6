@@ -843,7 +843,15 @@ def get_equipment_items(lototo_id):
     )
 
 def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
-    """Backfill equipment status rows for legacy LOTOTO records only once."""
+    """
+    Pastikan hanya Equipment for LOTOTO yang identik dengan Equipment for
+    Working (ID dan nama sama) yang dibuat sebagai item LOTOTO.
+
+    Jika Equipment for Working lain juga memetakan Equipment for LOTOTO
+    identik tersebut, statusnya akan terlihat pada baris Equipment for LOTOTO
+    yang sama di Matrix melalui status global per equipment_machine_id.
+    Equipment LOTOTO lain milik Working tersebut tidak otomatis diaktifkan.
+    """
     state_cursor = conn.cursor()
     state_cursor.execute(
         "SELECT work_status, end_time FROM public.lototo WHERE id = %s",
@@ -853,20 +861,50 @@ def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
     if not parent_state:
         state_cursor.close()
         return
-    parent_status, parent_end_time = parent_state
-    child_status = "COMPLETED" if parent_status == "COMPLETED" else "ACTIVE"
-    for equipment_id in get_mapped_equipment(working_machine_id):
+
+    working_id = str(working_machine_id)
+    mapped_ids = {str(item) for item in get_mapped_equipment(working_id)}
+
+    # Identitas harus cocok pada ID dan nama master.
+    # ID yang sama merujuk satu nama master yang sama di tabel machines.
+    state_cursor.execute(
+        """
+        SELECT machine_id, machine_name
+        FROM public.machines
+        WHERE machine_id = %s
+        """,
+        (working_id,)
+    )
+    working_machine = state_cursor.fetchone()
+
+    if working_machine and working_id in mapped_ids:
+        working_machine_name = str(working_machine[1]).strip()
         state_cursor.execute(
             """
-            INSERT INTO public.lototo_equipment_items
-                (lototo_id, working_machine_id, equipment_machine_id,
-                 status, started_at, ended_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (lototo_id, equipment_machine_id) DO NOTHING
+            SELECT machine_id
+            FROM public.machines
+            WHERE machine_id = %s
+              AND TRIM(machine_name) = %s
             """,
-            (lototo_id, working_machine_id, equipment_id, child_status,
-             started_at, parent_end_time)
+            (working_id, working_machine_name)
         )
+        identical_lototo = state_cursor.fetchone()
+
+        if identical_lototo:
+            parent_status, parent_end_time = parent_state
+            child_status = "COMPLETED" if parent_status == "COMPLETED" else "ACTIVE"
+            state_cursor.execute(
+                """
+                INSERT INTO public.lototo_equipment_items
+                    (lototo_id, working_machine_id, equipment_machine_id,
+                     status, started_at, ended_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (lototo_id, equipment_machine_id) DO NOTHING
+                """,
+                (lototo_id, working_id, working_id, child_status,
+                 started_at, parent_end_time)
+            )
+
     conn.commit()
     state_cursor.close()
 
@@ -1665,21 +1703,29 @@ elif menu == "Start LOTOTO":
             # LOTOTO MATRIX - AUTOMATIC SELECTION IN BACKGROUND
             # Based on selected Equipment for Working. The separate Matrix
             # page remains available for viewing; no duplicate checkboxes here.
-            selected_working_name = machine_name_by_id.get(str(selected_machine), str(selected_machine))
-            mapped_equipment = get_mapped_equipment(selected_machine)
-
-            # Hanya aktifkan Equipment for LOTOTO yang ID dan nama mesinnya
-            # sama persis dengan Equipment for Working yang dipilih.
-            # Equipment for Working lain yang juga memetakan LOTOTO ID yang
-            # sama dianggap berbagi titik isolasi tersebut, tetapi equipment
-            # LOTOTO lain milik Working lain tidak ikut diaktifkan.
-            selected_lototo_name = machine_name_by_id.get(
-                str(selected_machine), str(selected_machine)
+            selected_working_id = str(selected_machine)
+            selected_working_name = machine_name_by_id.get(
+                selected_working_id, selected_working_id
             )
+            mapped_equipment = {
+                str(item) for item in get_mapped_equipment(selected_working_id)
+            }
+
+            # Yang dipilih hanya LOTOTO dengan ID dan nama yang identik
+            # dengan Equipment for Working yang dipilih. Working lain yang
+            # memetakan ID LOTOTO identik akan menampilkan status item yang
+            # sama di LOTOTO Matrix, tetapi equipment LOTOTO lain milik
+            # Working tersebut tidak ikut dibuat/diaktifkan.
             lototo_equipment_selected = []
-            if str(selected_machine) in {str(x) for x in mapped_equipment}:
-                if selected_lototo_name == selected_working_name:
-                    lototo_equipment_selected = [str(selected_machine)]
+            selected_lototo_name = machine_name_by_id.get(
+                selected_working_id, selected_working_id
+            )
+            if (
+                selected_working_id in mapped_equipment
+                and selected_lototo_name.strip()
+                == machine_name_by_id.get(selected_working_id, selected_working_id).strip()
+            ):
+                lototo_equipment_selected = [selected_working_id]
 
             # ------------------------------------------------
             # START
