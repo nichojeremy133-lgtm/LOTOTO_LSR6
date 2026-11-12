@@ -1666,6 +1666,20 @@ elif menu == "Start LOTOTO":
             # Based on selected Equipment for Working. The separate Matrix
             # page remains available for viewing; no duplicate checkboxes here.
             selected_working_name = machine_name_by_id.get(str(selected_machine), str(selected_machine))
+
+            # Identitas Equipment for Working harus sama persis dengan pilihan operator.
+            st.subheader("Equipment for Working yang dipilih")
+            st.dataframe(
+                pd.DataFrame([{
+                    "Equipment ID": str(selected_machine),
+                    "Equipment for Working": selected_working_name,
+                }]),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            # Daftar ini khusus Equipment for LOTOTO yang memiliki tanda V
+            # pada baris Equipment for Working terpilih di workbook.
             mapped_equipment = get_mapped_equipment(selected_machine)
             lototo_equipment_selected = list(mapped_equipment)
             st.subheader("Equipment for LOTOTO yang otomatis dipetakan")
