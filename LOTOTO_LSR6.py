@@ -112,6 +112,11 @@ def get_database_connection(database_url):
 # and not the REST API URL. Its database password is separate from the API key.
 try:
     conn = get_database_connection(SUPABASE_DB_URL)
+    # Recover a cached connection left INTRANS by a previous Streamlit rerun.
+    # All write workflows below explicitly commit; an open transaction here is
+    # therefore treated as an abandoned read transaction.
+    if conn.get_transaction_status() != psycopg2.extensions.TRANSACTION_STATUS_IDLE:
+        conn.rollback()
     cursor = conn.cursor()
 except psycopg2.OperationalError as exc:
     error_text = str(exc).lower()
@@ -360,49 +365,57 @@ cursor = conn.cursor()
 # FUNCTIONS
 # ============================================================
 
+def read_sql_df(query, params=None):
+    """Run a read-only query and always close its PostgreSQL transaction."""
+    try:
+        result = pd.read_sql_query(query, conn, params=params)
+    except Exception:
+        conn.rollback()
+        raise
+    else:
+        conn.commit()
+        return result
+
+
 def get_machines():
-    return pd.read_sql_query(
+    return read_sql_df(
         """
         SELECT *
         FROM machines
         ORDER BY machine_id
-        """,
-        conn
+        """
     )
 
 
 def get_lototo():
-    return pd.read_sql_query(
+    return read_sql_df(
         """
         SELECT *
         FROM lototo
         ORDER BY id DESC
-        """,
-        conn
+        """
     )
 
 
 def get_active_lototo():
-    return pd.read_sql_query(
+    return read_sql_df(
         """
         SELECT *
         FROM lototo
         WHERE work_status = 'ACTIVE'
         ORDER BY start_time DESC
-        """,
-        conn
+        """
     )
 
 
 def get_history():
-    return pd.read_sql_query(
+    return read_sql_df(
         """
         SELECT *
         FROM lototo
         WHERE work_status = 'COMPLETED'
         ORDER BY end_time DESC
-        """,
-        conn
+        """
     )
 
 
@@ -829,17 +842,18 @@ def get_mapped_equipment(working_machine_id):
         (str(working_machine_id),)
     )
     mapped = [row[0] for row in mapping_cursor.fetchall()]
+    conn.commit()
     mapping_cursor.close()
     return mapped
 
 def get_equipment_items(lototo_id):
-    return pd.read_sql_query(
+    return read_sql_df(
         """
         SELECT ei.*, m.machine_name, m.tag_padlock_total
         FROM public.lototo_equipment_items ei
         LEFT JOIN public.machines m ON m.machine_id = ei.equipment_machine_id
         WHERE ei.lototo_id = %s ORDER BY m.machine_name
-        """, conn, params=(lototo_id,)
+        """, params=(lototo_id,)
     )
 
 def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
@@ -859,6 +873,7 @@ def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
     )
     parent_state = state_cursor.fetchone()
     if not parent_state:
+        conn.commit()
         state_cursor.close()
         return
 
@@ -967,13 +982,12 @@ if detail_page == "detail" and detail_id:
 
     if detail_id is not None:
 
-        detail = pd.read_sql_query(
+        detail = read_sql_df(
             """
             SELECT *
             FROM lototo
             WHERE id = %s
             """,
-            conn,
             params=(detail_id,)
         )
 
@@ -1397,9 +1411,9 @@ elif menu == "LOTOTO Matrix":
                 continue
 
             # Pastikan item status tersedia untuk record LOTOTO terakhir dari Working ini.
-            latest_parent = pd.read_sql_query(
+            latest_parent = read_sql_df(
                 "SELECT id, work_status, start_time FROM public.lototo WHERE machine_id = %s ORDER BY id DESC LIMIT 1",
-                conn, params=(working_id,)
+                params=(working_id,)
             )
             if not latest_parent.empty:
                 ensure_lototo_equipment_items(
@@ -1408,7 +1422,7 @@ elif menu == "LOTOTO Matrix":
                 )
 
             # Tampilkan status terbaru untuk setiap Equipment for LOTOTO lintas kelompok Working.
-            global_states = pd.read_sql_query(
+            global_states = read_sql_df(
                 """
                 SELECT DISTINCT ON (ei.equipment_machine_id)
                     ei.equipment_machine_id, ei.status
@@ -1417,7 +1431,7 @@ elif menu == "LOTOTO Matrix":
                 WHERE ei.equipment_machine_id = ANY(%s)
                 ORDER BY ei.equipment_machine_id, ei.id DESC
                 """,
-                conn, params=(mapped_ids,)
+                params=(mapped_ids,)
             )
             status_by_equipment = {
                 str(row["equipment_machine_id"]): str(row["status"])
@@ -1853,6 +1867,9 @@ elif menu == "Start LOTOTO":
                             f"Equipment LOTOTO {overlapping_active[0]} sedang ACTIVE "
                             f"dalam pekerjaan Working {overlapping_active[1]}."
                         )
+
+                # End the SELECT transaction even when the form has validation errors.
+                conn.commit()
 
                 if errors:
 
