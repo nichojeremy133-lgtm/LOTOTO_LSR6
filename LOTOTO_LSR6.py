@@ -930,6 +930,26 @@ menu = st.sidebar.selectbox(
 )
 
 
+def render_open_detail_buttons(dataframe, key_prefix="detail"):
+    """Render Open Detail buttons that navigate within the current app tab."""
+    if dataframe.empty:
+        return
+    header = st.columns([0.55, 1.0, 1.0, 1.0, 1.0])
+    header[0].markdown("**Detail**")
+    for idx, (_, row) in enumerate(dataframe.iterrows()):
+        cols = st.columns([0.55, 1.0, 1.0, 1.0, 1.0])
+        record_id = int(row["id"])
+        if cols[0].button("Open", key=f"{key_prefix}_{record_id}_{idx}"):
+            st.session_state["detail_return_menu"] = st.session_state.get("Menu", "Active LOTOTO")
+            st.query_params["page"] = "detail"
+            st.query_params["id"] = str(record_id)
+            st.rerun()
+        cols[1].write(str(row.get("work_order", "-")))
+        cols[2].write(str(row.get("machine_id", "-")))
+        cols[3].write(str(row.get("technician", "-")))
+        cols[4].write(str(row.get("work_status", "-")))
+
+
 # ============================================================
 # HYPERLINK DETAIL PAGE
 # ============================================================
@@ -1320,15 +1340,14 @@ if menu == "Dashboard":
         ]
 
         st.dataframe(
-            display,
-            column_config={
-                "Work Order": st.column_config.LinkColumn(
-                    "🔗 Work Order",
-                    display_text="Open Detail"
-                )
-            },
+            display.drop(columns=["Work Order"], errors="ignore"),
             hide_index=True,
             use_container_width=True
+        )
+        st.caption("Buka detail pada tab aplikasi yang sama:")
+        render_open_detail_buttons(
+            active if "active" in locals() else history,
+            key_prefix="open_detail"
         )
     else:
         st.success("Tidak ada pekerjaan LOTOTO yang sedang aktif.")
@@ -1447,7 +1466,10 @@ elif menu == "LOTOTO Matrix":
 
             states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
             if states and all(state == "ACTIVE" for state in states):
-                st.success("Seluruh Equipment for LOTOTO pada Working ini sedang ACTIVE/terisolasi.")
+                st.success(
+                    f"🟢 EQUIPMENT FOR WORKING ACTIVE — {working_id} — {working_name}. "
+                    "Seluruh Equipment for LOTOTO pada baris ini sudah ACTIVE/terisolasi."
+                )
             elif states and all(state == "COMPLETED" for state in states):
                 st.info("Seluruh Equipment for LOTOTO pada Working ini sudah ENDED.")
             elif any(state == "COMPLETED" for state in states) and any(state == "ACTIVE" for state in states):
@@ -2066,15 +2088,14 @@ elif menu == "Active LOTOTO":
         ]
 
         st.dataframe(
-            display,
-            column_config={
-                "Work Order": st.column_config.LinkColumn(
-                    "🔗 Work Order",
-                    display_text="Open Detail"
-                )
-            },
+            display.drop(columns=["Work Order"], errors="ignore"),
             hide_index=True,
             use_container_width=True
+        )
+        st.caption("Buka detail pada tab aplikasi yang sama:")
+        render_open_detail_buttons(
+            active if "active" in locals() else history,
+            key_prefix="open_detail"
         )
 
 
@@ -2123,15 +2144,14 @@ elif menu == "End LOTOTO":
         ]
 
         st.dataframe(
-            display,
-            column_config={
-                "Work Order": st.column_config.LinkColumn(
-                    "🔗 Work Order",
-                    display_text="Open Detail"
-                )
-            },
+            display.drop(columns=["Work Order"], errors="ignore"),
             hide_index=True,
             use_container_width=True
+        )
+        st.caption("Buka detail pada tab aplikasi yang sama:")
+        render_open_detail_buttons(
+            active if "active" in locals() else history,
+            key_prefix="open_detail"
         )
 
 
@@ -2221,15 +2241,14 @@ elif menu == "History":
         ]
 
         st.dataframe(
-            display,
-            column_config={
-                "Work Order": st.column_config.LinkColumn(
-                    "🔗 Work Order",
-                    display_text="Open Detail"
-                )
-            },
+            display.drop(columns=["Work Order"], errors="ignore"),
             hide_index=True,
             use_container_width=True
+        )
+        st.caption("Buka detail pada tab aplikasi yang sama:")
+        render_open_detail_buttons(
+            history,
+            key_prefix="history_detail"
         )
 
         csv = history_display.to_csv(
