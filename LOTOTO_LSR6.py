@@ -1667,7 +1667,19 @@ elif menu == "Start LOTOTO":
             # page remains available for viewing; no duplicate checkboxes here.
             selected_working_name = machine_name_by_id.get(str(selected_machine), str(selected_machine))
             mapped_equipment = get_mapped_equipment(selected_machine)
-            lototo_equipment_selected = list(mapped_equipment)
+
+            # Hanya aktifkan Equipment for LOTOTO yang ID dan nama mesinnya
+            # sama persis dengan Equipment for Working yang dipilih.
+            # Equipment for Working lain yang juga memetakan LOTOTO ID yang
+            # sama dianggap berbagi titik isolasi tersebut, tetapi equipment
+            # LOTOTO lain milik Working lain tidak ikut diaktifkan.
+            selected_lototo_name = machine_name_by_id.get(
+                str(selected_machine), str(selected_machine)
+            )
+            lototo_equipment_selected = []
+            if str(selected_machine) in {str(x) for x in mapped_equipment}:
+                if selected_lototo_name == selected_working_name:
+                    lototo_equipment_selected = [str(selected_machine)]
 
             # ------------------------------------------------
             # START
