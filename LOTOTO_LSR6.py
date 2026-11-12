@@ -1140,26 +1140,17 @@ if detail_page == "detail" and detail_id:
 
                 st.divider()
                 st.subheader("⏹️ End LOTOTO per Equipment for LOTOTO")
-                st.caption("Pilih equipment LOTOTO yang selesai di-END. Equipment lain yang masih ACTIVE tetap berjalan.")
+                st.caption("Semua Equipment for LOTOTO yang masih ACTIVE pada aktivitas ini akan di-END.")
 
                 ensure_lototo_equipment_items(detail_id, str(selected["machine_id"]), selected["start_time"])
                 equipment_state = get_equipment_items(detail_id)
                 active_equipment = equipment_state[equipment_state["status"] == "ACTIVE"].copy()
 
                 if not active_equipment.empty:
-                    options = active_equipment["equipment_machine_id"].astype(str).tolist()
-                    names = {
-                        str(row["equipment_machine_id"]):
-                        f"{row['equipment_machine_id']} — {row['machine_name'] or row['equipment_machine_id']}"
-                        for _, row in active_equipment.iterrows()
-                    }
+                    # Tidak perlu menampilkan pilihan Equipment for LOTOTO.
+                    # Semua item ACTIVE yang terikat pada aktivitas ini diproses saat END.
+                    selected_to_end = active_equipment["equipment_machine_id"].astype(str).tolist()
                     with st.form(f"end_lototo_detail_{detail_id}"):
-                        selected_to_end = st.multiselect(
-                            "Pilih Equipment for LOTOTO yang akan di-END",
-                            options=options,
-                            format_func=lambda x: names.get(str(x), str(x)),
-                            key=f"detail_end_equipment_{detail_id}"
-                        )
                         end_lock_photo = st.file_uploader(
                             "📷 Upload Foto End Lock Out", type=["jpg", "jpeg", "png"],
                             key=f"detail_end_lock_{detail_id}"
@@ -1176,12 +1167,10 @@ if detail_page == "detail" and detail_id:
                             "Saya memastikan equipment yang dipilih telah selesai dan aman untuk END.",
                             key=f"detail_end_confirmation_{detail_id}"
                         )
-                        end_button = st.form_submit_button("⏹️ END EQUIPMENT TERPILIH")
+                        end_button = st.form_submit_button("⏹️ END LOTOTO")
 
                     if end_button:
-                        if not selected_to_end:
-                            st.error("Pilih minimal satu Equipment for LOTOTO yang akan di-END.")
-                        elif end_lock_photo is None or end_tag_photo is None:
+                        if end_lock_photo is None or end_tag_photo is None:
                             st.error("Foto End Lock Out dan End Tag Out wajib diupload.")
                         elif not checked_restored:
                             st.error("LSR 6 Step 7 belum diverifikasi.")
