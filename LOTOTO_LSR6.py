@@ -246,6 +246,14 @@ def initialize_database(database_url):
         status TEXT DEFAULT 'AVAILABLE'
     )
     """)
+    db_cursor.execute("ALTER TABLE public.machines ADD COLUMN IF NOT EXISTS tag_padlock_total INTEGER")
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS public.equipment_lototo_matrix (
+        working_machine_id TEXT NOT NULL REFERENCES public.machines(machine_id),
+        lototo_machine_id TEXT NOT NULL REFERENCES public.machines(machine_id),
+        PRIMARY KEY (working_machine_id, lototo_machine_id)
+    )
+    """)
     db_cursor.execute("""
     CREATE TABLE IF NOT EXISTS lototo (
         id BIGSERIAL PRIMARY KEY,
@@ -285,6 +293,22 @@ def initialize_database(database_url):
         end_confirmation INTEGER DEFAULT 0
     )
     """)
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS public.lototo_equipment_items (
+        id BIGSERIAL PRIMARY KEY,
+        lototo_id BIGINT NOT NULL REFERENCES public.lototo(id) ON DELETE CASCADE,
+        working_machine_id TEXT NOT NULL,
+        equipment_machine_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        started_at TEXT,
+        ended_at TEXT,
+        end_lock_photo TEXT,
+        end_tag_photo TEXT,
+        end_evidence_time TEXT,
+        UNIQUE (lototo_id, equipment_machine_id)
+    )
+    """)
+    db_cursor.execute("CREATE INDEX IF NOT EXISTS idx_lototo_equipment_parent ON public.lototo_equipment_items (lototo_id, status)")
     db_conn.commit()
 
     migration_columns = {
@@ -484,74 +508,368 @@ def duration_between(start_time, end_time):
 
 
 # ============================================================
-# EQUIPMENT MATRIX (temporary seed from the visible Working rows in
-# the supplied image; expand when the complete matrix is provided)
+# EQUIPMENT CATALOG + LOTOTO MATRIX
+# Imported from all five sheets in the uploaded workbook: 131 equipment, 339 V mappings.
 # ============================================================
-LOTOTO_MATRIX_COLUMNS = [
-    "Bucket Elevator Line 1", "Vibrating Conveyor Line 1", "Throttle Valve",
-    "Bag Applicator", "Rotary Feeder Line 1", "Chain Conveyor",
-    "Rotary Screen", "Small Bag Filter 1", "Small Bag Filter Fan 1",
-    "Small Bag Filter 2", "Small Bag Filter Fan 2", "Packer Machine 1",
-    "Belt Conveyor 1", "Belt Bag Cleaner", "Belt Conveyor 2",
-    "Belt Check Weight", "Belt Reject", "Belt Conveyor 3",
-    "Belt Conveyor 1 - Diverter", "Belt Conveyor 4", "Gravity Roller",
-    "Palletizer 1", "Roller Curve to Palletizer 3",
-]
-# Visible Working rows and V marks transcribed from the image.
-WORKING_TO_LOTOTO = {
-    "N6021BE01": ["Bucket Elevator Line 1", "Vibrating Conveyor Line 1", "Chain Conveyor"],
-    "N6021VC01": ["Bucket Elevator Line 1", "Vibrating Conveyor Line 1"],
-    "N6021SG01": ["Vibrating Conveyor Line 1", "Throttle Valve", "Rotary Feeder Line 1"],
-    "N6021BA01": ["Bag Applicator"],
-    "N6021RA01": ["Throttle Valve", "Rotary Feeder Line 1", "Packer Machine 1"],
-}
 
-# Equipment for Working rows visible in the user's image. These records are
-# inserted into Supabase automatically so Start LOTOTO can be used immediately.
-# Energy source and isolation point are intentionally marked for field verification
-# because the supplied image does not specify those details.
-WORKING_EQUIPMENT_CATALOG = [
-    {"machine_id": "N6021BE01", "machine_name": "BUCKET ELEVATOR LINE 1", "points": 3},
-    {"machine_id": "N6021VC01", "machine_name": "VIBRATING CONVEYOR LINE 1", "points": 2},
-    {"machine_id": "N6021SG01", "machine_name": "THROTTLE VALVE", "points": 3},
-    {"machine_id": "N6021BA01", "machine_name": "BAG APPLICATOR", "points": 1},
-    {"machine_id": "N6021RA01", "machine_name": "ROTARY FEEDER LINE 1", "points": 3},
-]
+WORKING_EQUIPMENT_CATALOG = [{'machine_id': 'N6021BE01', 'machine_name': 'BUCKET ELEVATOR LINE 1', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021VC01', 'machine_name': 'VIBRATING CONVEYOR LINE 1', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021SG01', 'machine_name': 'THROTTLE VALVE', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BA01', 'machine_name': 'BAG APPLICATOR', 'points': 1, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021RA01', 'machine_name': 'ROTARY FEEDER LINE 1', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021CV01', 'machine_name': 'CHAIN CONVEYOR', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021RY01', 'machine_name': 'ROTARY SCREEN', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BF01', 'machine_name': 'SMALL BAG FILTER 1', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021FN01', 'machine_name': 'SMALL BAG FILTER FAN 1', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BF02', 'machine_name': 'SMALL BAG FILTER 2', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021FN02', 'machine_name': 'SMALL BAG FILTER FAN 2', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021PM01', 'machine_name': 'PACKER MACHINE 1', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BC01', 'machine_name': 'BELT CONVEYOR 1', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021NS01', 'machine_name': 'BELT BAG CLEANER', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BC02', 'machine_name': 'BELT CONVEYOR 2', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021CW01', 'machine_name': 'BELT CHECK WEIGHT', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BR01', 'machine_name': 'BELT REJECT', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BC03', 'machine_name': 'BELT CONVEYOR 3', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021YD01', 'machine_name': 'BELT DIVERTER', 'points': 2, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021BC04', 'machine_name': 'BELT CONVEYOR 4', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021RB01', 'machine_name': 'GRAVITY ROLLER', 'points': 3, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021PA01', 'machine_name': 'PALLETIZER 1', 'points': 1, 'area': 'PH LINE 1'},
+ {'machine_id': 'N6021GK01',
+  'machine_name': 'ROLLER CURVE TO PALLETIZER 3',
+  'points': 2,
+  'area': 'PH LINE 1'},
+ {'machine_id': 'N6022BE01', 'machine_name': 'BUCKET ELEVATOR LINE 2', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022VC01', 'machine_name': 'VIBRATING CONVEYOR LINE 2', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022SG01', 'machine_name': 'THROTTLE VALVE', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BA01', 'machine_name': 'BAG APPLICATOR', 'points': 1, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022RA01', 'machine_name': 'ROTARY FEEDER LINE 2', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022CV01', 'machine_name': 'CHAIN CONVEYOR', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022RY01', 'machine_name': 'ROTARY SCREEN', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BF01', 'machine_name': 'SMALL BAG FILTER 1', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022FN01', 'machine_name': 'SMALL BAG FILTER FAN 1', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BF02', 'machine_name': 'SMALL BAG FILTER 2', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022FN02', 'machine_name': 'SMALL BAG FILTER FAN 2', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022PM01', 'machine_name': 'PACKER MACHINE 2', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BC01', 'machine_name': 'BELT CONVEYOR 1', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022NS01', 'machine_name': 'BELT BAG CLEANER', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BC02', 'machine_name': 'BELT CONVEYOR 2', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022CW01', 'machine_name': 'BELT CHECK WEIGHT', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BR01', 'machine_name': 'BELT REJECT', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BC03', 'machine_name': 'BELT CONVEYOR 3', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022GK01', 'machine_name': 'ROLLER CURVE 1', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BC04', 'machine_name': 'BELT CONVEYOR 4', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022GK02', 'machine_name': 'ROLLER CURVE 2', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N60222BC05', 'machine_name': 'BELT CONVEYOR 5', 'points': 4, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022YD01', 'machine_name': 'BELT DIVERTER', 'points': 2, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022GK03', 'machine_name': 'ROLLER CURVE 3', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022BC06', 'machine_name': 'BELT CONVEYOR 6', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022RB01', 'machine_name': 'GRAVITY ROLLER', 'points': 3, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6022PA01', 'machine_name': 'PALLETIZER 2', 'points': 1, 'area': 'PH LINE 2'},
+ {'machine_id': 'N6023BE01', 'machine_name': 'BUCKET ELEVATOR LINE 3', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023VC01', 'machine_name': 'VIBRATING CONVEYOR LINE 3', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023SG01', 'machine_name': 'THROTTLE VALVE', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BA01', 'machine_name': 'BAG APPLICATOR', 'points': 1, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023RA01', 'machine_name': 'ROTARY FEEDER LINE 3', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023CV01', 'machine_name': 'CHAIN CONVEYOR', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023RY01', 'machine_name': 'ROTARY SCREEN', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BF01', 'machine_name': 'SMALL BAG FILTER 1', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023FN01', 'machine_name': 'SMALL BAG FILTER FAN 1', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BF02', 'machine_name': 'SMALL BAG FILTER 2', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023FN02', 'machine_name': 'SMALL BAG FILTER FAN 2', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023PM01', 'machine_name': 'PACKER MACHINE 3', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BC01', 'machine_name': 'BELT CONVEYOR 1', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023NS01', 'machine_name': 'BELT BAG CLEANER', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BC02', 'machine_name': 'BELT CONVEYOR 2', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023CW01', 'machine_name': 'BELT CHECK WEIGHT', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BR01', 'machine_name': 'BELT REJECT', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BC03', 'machine_name': 'BELT CONVEYOR 3', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023GK01', 'machine_name': 'ROLLER CURVE 1', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BC04', 'machine_name': 'BELT CONVEYOR 4', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023GK02', 'machine_name': 'ROLLER CURVE 2', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N60232BC05', 'machine_name': 'BELT CONVEYOR 5', 'points': 4, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023YD01', 'machine_name': 'BELT DIVERTER', 'points': 2, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023GK03', 'machine_name': 'ROLLER CURVE 3', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023BC06', 'machine_name': 'BELT CONVEYOR 6', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023RB01', 'machine_name': 'GRAVITY ROLLER', 'points': 3, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6023PA01', 'machine_name': 'PALLETIZER 3', 'points': 1, 'area': 'PH LINE 3'},
+ {'machine_id': 'N6024BE01', 'machine_name': 'BUCKET ELEVATOR LINE 4', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024VC01', 'machine_name': 'VIBRATING CONVEYOR LINE 4', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024SG01', 'machine_name': 'THROTTLE VALVE', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BA01', 'machine_name': 'BAG APPLICATOR', 'points': 1, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024RA01', 'machine_name': 'ROTARY FEEDER LINE 4', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024CV01', 'machine_name': 'CHAIN CONVEYOR', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024RY01', 'machine_name': 'ROTARY SCREEN', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BF01', 'machine_name': 'SMALL BAG FILTER 1', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024FN01', 'machine_name': 'SMALL BAG FILTER FAN 1', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BF02', 'machine_name': 'SMALL BAG FILTER 2', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024FN02', 'machine_name': 'SMALL BAG FILTER FAN 2', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024PM01', 'machine_name': 'PACKER MACHINE 4', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BC01', 'machine_name': 'BELT CONVEYOR 1', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024NS01', 'machine_name': 'BELT BAG CLEANER', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BC02', 'machine_name': 'BELT CONVEYOR 2', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024CW01', 'machine_name': 'BELT CHECK WEIGHT', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BR01', 'machine_name': 'BELT REJECT', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BC03', 'machine_name': 'BELT CONVEYOR 3', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024GK01', 'machine_name': 'ROLLER CURVE 1', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BC04', 'machine_name': 'BELT CONVEYOR 4', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024GK02', 'machine_name': 'ROLLER CURVE 2', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N60242BC05', 'machine_name': 'BELT CONVEYOR 5', 'points': 4, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024YD01', 'machine_name': 'BELT DIVERTER', 'points': 2, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024GK03', 'machine_name': 'ROLLER CURVE 3', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024BC06', 'machine_name': 'BELT CONVEYOR 6', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024RB01', 'machine_name': 'GRAVITY ROLLER', 'points': 3, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6024PA01', 'machine_name': 'PALLETIZER 4', 'points': 1, 'area': 'PH LINE 4'},
+ {'machine_id': 'N6025BE01', 'machine_name': 'BUCKET ELEVATOR LINE 5', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025VC01', 'machine_name': 'VIBRATING CONVEYOR LINE 5', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025SG01', 'machine_name': 'THROTTLE VALVE', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BA01', 'machine_name': 'BAG APPLICATOR', 'points': None, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025RA01', 'machine_name': 'ROTARY FEEDER LINE 5', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025CV01', 'machine_name': 'CHAIN CONVEYOR', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025RY01', 'machine_name': 'ROTARY SCREEN', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BF01', 'machine_name': 'SMALL BAG FILTER 1', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025FN01', 'machine_name': 'SMALL BAG FILTER FAN 1', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BF02', 'machine_name': 'SMALL BAG FILTER 2', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025FN02', 'machine_name': 'SMALL BAG FILTER FAN 2', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025PM01', 'machine_name': 'PACKER MACHINE 5', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BC01', 'machine_name': 'BELT CONVEYOR 1', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025NS01', 'machine_name': 'BELT BAG CLEANER', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BC02', 'machine_name': 'BELT CONVEYOR 2', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025CW01', 'machine_name': 'BELT CHECK WEIGHT', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BR01', 'machine_name': 'BELT REJECT', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BC03', 'machine_name': 'BELT CONVEYOR 3', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025GK01', 'machine_name': 'ROLLER CURVE 1', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BC04', 'machine_name': 'BELT CONVEYOR 4', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025GK02', 'machine_name': 'ROLLER CURVE 2', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N60252BC05', 'machine_name': 'BELT CONVEYOR 5', 'points': 4, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025YD01', 'machine_name': 'BELT DIVERTER', 'points': 2, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025GK03', 'machine_name': 'ROLLER CURVE 3', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025BC06', 'machine_name': 'BELT CONVEYOR 6', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025RB01', 'machine_name': 'GRAVITY ROLLER', 'points': 3, 'area': 'PH LINE 5'},
+ {'machine_id': 'N6025PA01', 'machine_name': 'PALLETIZER 5', 'points': 1, 'area': 'PH LINE 5'}]
 
+WORKING_TO_LOTOTO = {'N6021BE01': ['N6021BE01', 'N6021VC01', 'N6021CV01'],
+ 'N6021VC01': ['N6021BE01', 'N6021VC01'],
+ 'N6021SG01': ['N6021VC01', 'N6021SG01', 'N6021RA01'],
+ 'N6021BA01': ['N6021BA01'],
+ 'N6021RA01': ['N6021SG01', 'N6021RA01', 'N6021PM01'],
+ 'N6021CV01': ['N6021BE01', 'N6021CV01', 'N6021RY01'],
+ 'N6021RY01': ['N6021RY01', 'N6021BR01'],
+ 'N6021BF01': ['N6021BF01', 'N6021FN01'],
+ 'N6021FN01': ['N6021BF01', 'N6021FN01'],
+ 'N6021BF02': ['N6021BF02', 'N6021FN02'],
+ 'N6021FN02': ['N6021BF02', 'N6021FN02'],
+ 'N6021PM01': ['N6021RA01', 'N6021PM01', 'N6021BC01'],
+ 'N6021BC01': ['N6021PM01', 'N6021BC01', 'N6021NS01'],
+ 'N6021NS01': ['N6021BC01', 'N6021NS01', 'N6021BC02'],
+ 'N6021BC02': ['N6021NS01', 'N6021BC02', 'N6021CW01'],
+ 'N6021CW01': ['N6021BC02', 'N6021CW01', 'N6021BR01'],
+ 'N6021BR01': ['N6021CW01', 'N6021BR01', 'N6021BC03'],
+ 'N6021BC03': ['N6021BR01', 'N6021BC03'],
+ 'N6021YD01': ['N6021BC03', 'N6021YD01'],
+ 'N6021BC04': ['N6021BC03', 'N6021BC04', 'N6021RB01'],
+ 'N6021RB01': ['N6021BC04', 'N6021RB01', 'N6021PA01'],
+ 'N6021PA01': ['N6021PA01'],
+ 'N6021GK01': ['N6021BC03', 'N6021GK01'],
+ 'N6022BE01': ['N6022BE01', 'N6022VC01', 'N6022CV01'],
+ 'N6022VC01': ['N6022BE01', 'N6022VC01'],
+ 'N6022SG01': ['N6022VC01', 'N6022SG01', 'N6022RA01'],
+ 'N6022BA01': ['N6022BA01'],
+ 'N6022RA01': ['N6022SG01', 'N6022RA01', 'N6022PM01'],
+ 'N6022CV01': ['N6022BE01', 'N6022CV01', 'N6022RY01'],
+ 'N6022RY01': ['N6022RY01', 'N6022BR01'],
+ 'N6022BF01': ['N6022BF01', 'N6022FN01'],
+ 'N6022FN01': ['N6022BF01', 'N6022FN01'],
+ 'N6022BF02': ['N6022BF02', 'N6022FN02'],
+ 'N6022FN02': ['N6022BF02', 'N6022FN02'],
+ 'N6022PM01': ['N6022RA01', 'N6022PM01', 'N6022BC01'],
+ 'N6022BC01': ['N6022PM01', 'N6022BC01', 'N6022NS01'],
+ 'N6022NS01': ['N6022BC01', 'N6022NS01', 'N6022BC02'],
+ 'N6022BC02': ['N6022NS01', 'N6022BC02', 'N6022CW01'],
+ 'N6022CW01': ['N6022BC02', 'N6022CW01', 'N6022BR01'],
+ 'N6022BR01': ['N6022CW01', 'N6022BR01', 'N6022BC03'],
+ 'N6022BC03': ['N6022BR01', 'N6022BC03', 'N6022GK01'],
+ 'N6022GK01': ['N6022BC03', 'N6022GK01', 'N6022BC04'],
+ 'N6022BC04': ['N6022GK01', 'N6022BC04', 'N6022GK02'],
+ 'N6022GK02': ['N6022BC04', 'N6022GK02', 'N60222BC05'],
+ 'N60222BC05': ['N6022GK02', 'N60222BC05', 'N6022YD01', 'N6022GK03'],
+ 'N6022YD01': ['N60222BC05', 'N6022YD01'],
+ 'N6022GK03': ['N60222BC05', 'N6022GK03', 'N6022BC06'],
+ 'N6022BC06': ['N6022GK03', 'N6022BC06', 'N6022RB01'],
+ 'N6022RB01': ['N6022BC06', 'N6022RB01', 'N6022PA01'],
+ 'N6022PA01': ['N6022PA01'],
+ 'N6023BE01': ['N6023BE01', 'N6023VC01', 'N6023CV01'],
+ 'N6023VC01': ['N6023BE01', 'N6023VC01'],
+ 'N6023SG01': ['N6023VC01', 'N6023SG01', 'N6023RA01'],
+ 'N6023BA01': ['N6023BA01'],
+ 'N6023RA01': ['N6023SG01', 'N6023RA01', 'N6023PM01'],
+ 'N6023CV01': ['N6023BE01', 'N6023CV01', 'N6023RY01'],
+ 'N6023RY01': ['N6023RY01', 'N6023BR01'],
+ 'N6023BF01': ['N6023BF01', 'N6023FN01'],
+ 'N6023FN01': ['N6023BF01', 'N6023FN01'],
+ 'N6023BF02': ['N6023BF02', 'N6023FN02'],
+ 'N6023FN02': ['N6023BF02', 'N6023FN02'],
+ 'N6023PM01': ['N6023RA01', 'N6023PM01', 'N6023BC01'],
+ 'N6023BC01': ['N6023PM01', 'N6023BC01', 'N6023NS01'],
+ 'N6023NS01': ['N6023BC01', 'N6023NS01', 'N6023BC02'],
+ 'N6023BC02': ['N6023NS01', 'N6023BC02', 'N6023CW01'],
+ 'N6023CW01': ['N6023BC02', 'N6023CW01', 'N6023BR01'],
+ 'N6023BR01': ['N6023CW01', 'N6023BR01', 'N6023BC03'],
+ 'N6023BC03': ['N6023BR01', 'N6023BC03', 'N6023GK01'],
+ 'N6023GK01': ['N6023BC03', 'N6023GK01', 'N6023BC04'],
+ 'N6023BC04': ['N6023GK01', 'N6023BC04', 'N6023GK02'],
+ 'N6023GK02': ['N6023BC04', 'N6023GK02', 'N60232BC05'],
+ 'N60232BC05': ['N6023GK02', 'N60232BC05', 'N6023YD01', 'N6023GK03'],
+ 'N6023YD01': ['N60232BC05', 'N6023YD01'],
+ 'N6023GK03': ['N60232BC05', 'N6023GK03', 'N6023BC06'],
+ 'N6023BC06': ['N6023GK03', 'N6023BC06', 'N6023RB01'],
+ 'N6023RB01': ['N6023BC06', 'N6023RB01', 'N6023PA01'],
+ 'N6023PA01': ['N6023PA01'],
+ 'N6024BE01': ['N6024BE01', 'N6024VC01', 'N6024CV01'],
+ 'N6024VC01': ['N6024BE01', 'N6024VC01'],
+ 'N6024SG01': ['N6024VC01', 'N6024SG01', 'N6024RA01'],
+ 'N6024BA01': ['N6024BA01'],
+ 'N6024RA01': ['N6024SG01', 'N6024RA01', 'N6024PM01'],
+ 'N6024CV01': ['N6024BE01', 'N6024CV01', 'N6024RY01'],
+ 'N6024RY01': ['N6024RY01', 'N6024BR01'],
+ 'N6024BF01': ['N6024BF01', 'N6024FN01'],
+ 'N6024FN01': ['N6024BF01', 'N6024FN01'],
+ 'N6024BF02': ['N6024BF02', 'N6024FN02'],
+ 'N6024FN02': ['N6024BF02', 'N6024FN02'],
+ 'N6024PM01': ['N6024RA01', 'N6024PM01', 'N6024BC01'],
+ 'N6024BC01': ['N6024PM01', 'N6024BC01', 'N6024NS01'],
+ 'N6024NS01': ['N6024BC01', 'N6024NS01', 'N6024BC02'],
+ 'N6024BC02': ['N6024NS01', 'N6024BC02', 'N6024CW01'],
+ 'N6024CW01': ['N6024BC02', 'N6024CW01', 'N6024BR01'],
+ 'N6024BR01': ['N6024CW01', 'N6024BR01', 'N6024BC03'],
+ 'N6024BC03': ['N6024BR01', 'N6024BC03', 'N6024GK01'],
+ 'N6024GK01': ['N6024BC03', 'N6024GK01', 'N6024BC04'],
+ 'N6024BC04': ['N6024GK01', 'N6024BC04', 'N6024GK02'],
+ 'N6024GK02': ['N6024BC04', 'N6024GK02', 'N60242BC05'],
+ 'N60242BC05': ['N6024GK02', 'N60242BC05', 'N6024YD01', 'N6024GK03'],
+ 'N6024YD01': ['N60242BC05', 'N6024YD01'],
+ 'N6024GK03': ['N60242BC05', 'N6024GK03', 'N6024BC06'],
+ 'N6024BC06': ['N6024GK03', 'N6024BC06', 'N6024RB01'],
+ 'N6024RB01': ['N6024BC06', 'N6024RB01', 'N6024PA01'],
+ 'N6024PA01': ['N6024PA01'],
+ 'N6025BE01': ['N6024BE01', 'N6024VC01', 'N6024CV01'],
+ 'N6025VC01': ['N6024BE01', 'N6024VC01'],
+ 'N6025SG01': ['N6024VC01', 'N6024SG01', 'N6024RA01'],
+ 'N6025BA01': [],
+ 'N6025RA01': ['N6024SG01', 'N6024RA01', 'N6024PM01'],
+ 'N6025CV01': ['N6024BE01', 'N6024CV01', 'N6024RY01'],
+ 'N6025RY01': ['N6024RY01', 'N6024BR01'],
+ 'N6025BF01': ['N6024BF01', 'N6024FN01'],
+ 'N6025FN01': ['N6024BF01', 'N6024FN01'],
+ 'N6025BF02': ['N6024BF02', 'N6024FN02'],
+ 'N6025FN02': ['N6024BF02', 'N6024FN02'],
+ 'N6025PM01': ['N6024RA01', 'N6024PM01', 'N6024BC01'],
+ 'N6025BC01': ['N6024PM01', 'N6024BC01', 'N6024NS01'],
+ 'N6025NS01': ['N6024BC01', 'N6024NS01', 'N6024BC02'],
+ 'N6025BC02': ['N6024NS01', 'N6024BC02', 'N6024CW01'],
+ 'N6025CW01': ['N6024BC02', 'N6024CW01', 'N6024BR01'],
+ 'N6025BR01': ['N6024CW01', 'N6024BR01', 'N6024BC03'],
+ 'N6025BC03': ['N6024BR01', 'N6024BC03', 'N6024GK01'],
+ 'N6025GK01': ['N6024BC03', 'N6024GK01', 'N6024BC04'],
+ 'N6025BC04': ['N6024GK01', 'N6024BC04', 'N6024GK02'],
+ 'N6025GK02': ['N6024BC04', 'N6024GK02', 'N60242BC05'],
+ 'N60252BC05': ['N6024GK02', 'N60242BC05', 'N6024YD01', 'N6024GK03'],
+ 'N6025YD01': ['N60242BC05', 'N6024YD01'],
+ 'N6025GK03': ['N60242BC05', 'N6024GK03', 'N6024BC06'],
+ 'N6025BC06': ['N6024GK03', 'N6024BC06', 'N6024RB01'],
+ 'N6025RB01': ['N6024BC06', 'N6024RB01', 'N6024PA01'],
+ 'N6025PA01': ['N6024PA01']}
 
+@st.cache_resource(show_spinner=False)
 def seed_working_equipment():
-    """Populate the machines table from the visible Working equipment catalog.
-
-    ON CONFLICT DO NOTHING preserves existing machine records and user data.
-    """
+    """Seed machine master and all Working-to-LOTOTO relationships once per app process."""
     seed_cursor = conn.cursor()
     for item in WORKING_EQUIPMENT_CATALOG:
         seed_cursor.execute(
             """
             INSERT INTO public.machines
-                (machine_id, machine_name, area, energy_source, isolation_point, status)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (machine_id) DO NOTHING
+                (machine_id, machine_name, area, energy_source, isolation_point, status, tag_padlock_total)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (machine_id) DO UPDATE SET
+                machine_name = EXCLUDED.machine_name,
+                area = EXCLUDED.area,
+                tag_padlock_total = EXCLUDED.tag_padlock_total
             """,
-            (
-                item["machine_id"],
-                item["machine_name"],
-                "Production",
-                "Perlu verifikasi lapangan",
-                "Mengacu LOTOTO Matrix; verifikasi titik isolasi di lapangan",
-                "AVAILABLE",
-            ),
+            (item["machine_id"], item["machine_name"], item["area"],
+             "Perlu verifikasi lapangan",
+             "Mengacu LOTOTO Matrix; verifikasi titik isolasi di lapangan",
+             "AVAILABLE", item["points"])
         )
+    seed_cursor.execute("DELETE FROM public.equipment_lototo_matrix")
+    for working_id, lototo_ids in WORKING_TO_LOTOTO.items():
+        for lototo_id in lototo_ids:
+            seed_cursor.execute(
+                """
+                INSERT INTO public.equipment_lototo_matrix
+                    (working_machine_id, lototo_machine_id)
+                VALUES (%s, %s)
+                ON CONFLICT DO NOTHING
+                """,
+                (working_id, lototo_id)
+            )
     conn.commit()
     seed_cursor.close()
 
+# Sinkronkan master equipment dan relasi berdasarkan tanda V dari workbook saat app mulai.
+seed_working_equipment()
 
-try:
-    seed_working_equipment()
-except Exception as exc:
-    conn.rollback()
-    st.error(f"Gagal memuat data Equipment for Working otomatis: {exc}")
-    st.stop()
+def get_mapped_equipment(working_machine_id):
+    mapping_cursor = conn.cursor()
+    mapping_cursor.execute(
+        """
+        SELECT lototo_machine_id
+        FROM public.equipment_lototo_matrix
+        WHERE working_machine_id = %s
+        ORDER BY lototo_machine_id
+        """,
+        (str(working_machine_id),)
+    )
+    mapped = [row[0] for row in mapping_cursor.fetchall()]
+    mapping_cursor.close()
+    return mapped
+
+def get_equipment_items(lototo_id):
+    return pd.read_sql_query(
+        """
+        SELECT ei.*, m.machine_name, m.tag_padlock_total
+        FROM public.lototo_equipment_items ei
+        LEFT JOIN public.machines m ON m.machine_id = ei.equipment_machine_id
+        WHERE ei.lototo_id = %s ORDER BY m.machine_name
+        """, conn, params=(lototo_id,)
+    )
+
+def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
+    """Backfill equipment status rows for legacy LOTOTO records only once."""
+    state_cursor = conn.cursor()
+    state_cursor.execute(
+        "SELECT work_status, end_time FROM public.lototo WHERE id = %s",
+        (lototo_id,)
+    )
+    parent_state = state_cursor.fetchone()
+    if not parent_state:
+        state_cursor.close()
+        return
+    parent_status, parent_end_time = parent_state
+    child_status = "COMPLETED" if parent_status == "COMPLETED" else "ACTIVE"
+    for equipment_id in get_mapped_equipment(working_machine_id):
+        state_cursor.execute(
+            """
+            INSERT INTO public.lototo_equipment_items
+                (lototo_id, working_machine_id, equipment_machine_id,
+                 status, started_at, ended_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (lototo_id, equipment_machine_id) DO NOTHING
+            """,
+            (lototo_id, working_machine_id, equipment_id, child_status,
+             started_at, parent_end_time)
+        )
+    conn.commit()
+    state_cursor.close()
+
 
 # ============================================================
 # HEADER
@@ -637,6 +955,21 @@ if detail_page == "detail" and detail_id:
                     f"**Duration:** "
                     f"{duration_between(selected['start_time'], selected['end_time'])}"
                 )
+
+            st.divider()
+
+            st.subheader("🟨 Equipment for LOTOTO")
+            ensure_lototo_equipment_items(detail_id, str(selected["machine_id"]), selected["start_time"])
+            detail_equipment_state = get_equipment_items(detail_id)
+            if not detail_equipment_state.empty:
+                detail_equipment_view = detail_equipment_state[[
+                    "equipment_machine_id", "machine_name", "status", "started_at", "ended_at"
+                ]].copy()
+                detail_equipment_view.columns = ["Equipment ID", "Equipment for LOTOTO", "Status", "Start", "End"]
+                detail_equipment_view["Status"] = detail_equipment_view["Status"].map(
+                    {"ACTIVE": "🟢 ACTIVE / TERISOLASI", "COMPLETED": "⚪ ENDED"}
+                ).fillna(detail_equipment_view["Status"])
+                st.dataframe(detail_equipment_view, use_container_width=True, hide_index=True)
 
             st.divider()
 
@@ -748,93 +1081,123 @@ if detail_page == "detail" and detail_id:
             if selected["work_status"] == "ACTIVE":
 
                 st.divider()
-                st.subheader("⏹️ End LOTOTO")
-                st.caption(
-                    "Lengkapi evidence End Lock Out, End Tag Out, Step 7, "
-                    "dan konfirmasi untuk menyelesaikan LOTOTO."
-                )
+                st.subheader("⏹️ End LOTOTO per Equipment for LOTOTO")
+                st.caption("Pilih equipment LOTOTO yang selesai di-END. Equipment lain yang masih ACTIVE tetap berjalan.")
 
-                with st.form(f"end_lototo_detail_{detail_id}"):
+                ensure_lototo_equipment_items(detail_id, str(selected["machine_id"]), selected["start_time"])
+                equipment_state = get_equipment_items(detail_id)
+                active_equipment = equipment_state[equipment_state["status"] == "ACTIVE"].copy()
 
-                    end_lock_photo = st.file_uploader(
-                        "📷 Upload Foto End Lock Out",
-                        type=["jpg", "jpeg", "png"],
-                        key=f"detail_end_lock_{detail_id}"
-                    )
-
-                    end_tag_photo = st.file_uploader(
-                        "📷 Upload Foto End Tag Out",
-                        type=["jpg", "jpeg", "png"],
-                        key=f"detail_end_tag_{detail_id}"
-                    )
-
-                    checked_restored = st.checkbox(
-                        "LSR 6 Step 7 telah diperiksa dan proses pengembalian "
-                        "dilakukan sesuai prosedur.",
-                        key=f"detail_checked_restored_{detail_id}"
-                    )
-
-                    confirmation = st.checkbox(
-                        "Saya memastikan pekerjaan LOTOTO telah selesai dan "
-                        "aman untuk END.",
-                        key=f"detail_end_confirmation_{detail_id}"
-                    )
-
-                    end_button = st.form_submit_button("⏹️ END WORK")
-
-                if end_button:
-                    if end_lock_photo is None:
-                        st.error("❌ Foto End Lock Out wajib diupload.")
-                    elif end_tag_photo is None:
-                        st.error("❌ Foto End Tag Out wajib diupload.")
-                    elif not checked_restored:
-                        st.error("❌ LSR 6 Step 7 belum diverifikasi.")
-                    elif not confirmation:
-                        st.error("❌ Konfirmasi END WORK belum dilakukan.")
-                    else:
-                        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-                        end_evidence_paths = save_uploaded_files_parallel(
-                            [
-                                ("END_LOCK", end_lock_photo),
-                                ("END_TAG", end_tag_photo),
-                            ],
-                            selected["work_order"],
-                            max_workers=2,
+                if not active_equipment.empty:
+                    options = active_equipment["equipment_machine_id"].astype(str).tolist()
+                    names = {
+                        str(row["equipment_machine_id"]):
+                        f"{row['equipment_machine_id']} — {row['machine_name'] or row['equipment_machine_id']}"
+                        for _, row in active_equipment.iterrows()
+                    }
+                    with st.form(f"end_lototo_detail_{detail_id}"):
+                        selected_to_end = st.multiselect(
+                            "Pilih Equipment for LOTOTO yang akan di-END",
+                            options=options,
+                            format_func=lambda x: names.get(str(x), str(x)),
+                            key=f"detail_end_equipment_{detail_id}"
                         )
-                        end_lock_path = end_evidence_paths["END_LOCK"]
-                        end_tag_path = end_evidence_paths["END_TAG"]
+                        end_lock_photo = st.file_uploader(
+                            "📷 Upload Foto End Lock Out", type=["jpg", "jpeg", "png"],
+                            key=f"detail_end_lock_{detail_id}"
+                        )
+                        end_tag_photo = st.file_uploader(
+                            "📷 Upload Foto End Tag Out", type=["jpg", "jpeg", "png"],
+                            key=f"detail_end_tag_{detail_id}"
+                        )
+                        checked_restored = st.checkbox(
+                            "LSR 6 Step 7 telah diperiksa dan proses pengembalian dilakukan sesuai prosedur.",
+                            key=f"detail_checked_restored_{detail_id}"
+                        )
+                        confirmation = st.checkbox(
+                            "Saya memastikan equipment yang dipilih telah selesai dan aman untuk END.",
+                            key=f"detail_end_confirmation_{detail_id}"
+                        )
+                        end_button = st.form_submit_button("⏹️ END EQUIPMENT TERPILIH")
 
-                        cursor.execute(
-                            """
-                            UPDATE lototo
-                            SET
-                                end_time = %s,
-                                checked_restored = 1,
-                                end_confirmation = 1,
-                                end_lock_photo = %s,
-                                end_tag_photo = %s,
-                                end_lock_photo_time = %s,
-                                end_tag_photo_time = %s,
-                                lototo_status = 'LSR 6 COMPLETE',
-                                work_status = 'COMPLETED'
-                            WHERE id = %s
-                            """,
-                            (
-                                end_time,
-                                end_lock_path,
-                                end_tag_path,
-                                end_time,
-                                end_time,
-                                detail_id
+                    if end_button:
+                        if not selected_to_end:
+                            st.error("Pilih minimal satu Equipment for LOTOTO yang akan di-END.")
+                        elif end_lock_photo is None or end_tag_photo is None:
+                            st.error("Foto End Lock Out dan End Tag Out wajib diupload.")
+                        elif not checked_restored:
+                            st.error("LSR 6 Step 7 belum diverifikasi.")
+                        elif not confirmation:
+                            st.error("Konfirmasi END belum dilakukan.")
+                        else:
+                            end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            end_paths = save_uploaded_files_parallel(
+                                [("END_LOCK", end_lock_photo), ("END_TAG", end_tag_photo)],
+                                selected["work_order"], max_workers=2
                             )
-                        )
+                            for equipment_id in selected_to_end:
+                                cursor.execute(
+                                    """
+                                    UPDATE public.lototo_equipment_items
+                                    SET status = 'COMPLETED', ended_at = %s,
+                                        end_lock_photo = %s, end_tag_photo = %s,
+                                        end_evidence_time = %s
+                                    WHERE lototo_id = %s AND equipment_machine_id = %s
+                                      AND status = 'ACTIVE'
+                                    """,
+                                    (end_time, end_paths["END_LOCK"], end_paths["END_TAG"],
+                                     end_time, detail_id, equipment_id)
+                                )
 
-                        conn.commit()
+                            cursor.execute(
+                                "SELECT COUNT(*) FROM public.lototo_equipment_items WHERE lototo_id = %s AND status = 'ACTIVE'",
+                                (detail_id,)
+                            )
+                            remaining_active = cursor.fetchone()[0]
+                            if remaining_active == 0:
+                                cursor.execute(
+                                    """
+                                    UPDATE public.lototo
+                                    SET end_time = %s, checked_restored = 1,
+                                        end_confirmation = 1, end_lock_photo = %s,
+                                        end_tag_photo = %s, end_lock_photo_time = %s,
+                                        end_tag_photo_time = %s,
+                                        lototo_status = 'LSR 6 COMPLETE',
+                                        work_status = 'COMPLETED'
+                                    WHERE id = %s
+                                    """,
+                                    (end_time, end_paths["END_LOCK"], end_paths["END_TAG"],
+                                     end_time, end_time, detail_id)
+                                )
+                            else:
+                                cursor.execute(
+                                    """
+                                    UPDATE public.lototo
+                                    SET end_lock_photo = %s, end_tag_photo = %s,
+                                        end_lock_photo_time = %s, end_tag_photo_time = %s
+                                    WHERE id = %s
+                                    """,
+                                    (end_paths["END_LOCK"], end_paths["END_TAG"],
+                                     end_time, end_time, detail_id)
+                                )
+                            conn.commit()
+                            if remaining_active == 0:
+                                st.success("Semua Equipment for LOTOTO sudah ENDED. Working equipment selesai.")
+                            else:
+                                st.warning(f"{len(selected_to_end)} equipment berhasil di-END. {remaining_active} equipment lainnya masih ACTIVE.")
+                            st.rerun()
+                else:
+                    st.success("Semua Equipment for LOTOTO sudah ENDED.")
 
-                        st.success("✅ LOTOTO selesai.")
-                        st.info(f"End Time: {end_time}")
-                        st.rerun()
+                st.subheader("Status Equipment for LOTOTO")
+                state_display = equipment_state[[
+                    "equipment_machine_id", "machine_name", "status", "started_at", "ended_at"
+                ]].copy()
+                state_display.columns = ["Equipment ID", "Equipment for LOTOTO", "Status", "Start", "End"]
+                state_display["Status"] = state_display["Status"].map(
+                    {"ACTIVE": "🟢 ACTIVE", "COMPLETED": "⚪ ENDED"}
+                ).fillna(state_display["Status"])
+                st.dataframe(state_display, use_container_width=True, hide_index=True)
 
             st.stop()
 
@@ -940,97 +1303,125 @@ if menu == "Dashboard":
 elif menu == "Data Mesin":
 
     st.title("🏭 Data Mesin")
-    st.caption(
-        "Data Equipment for Working dimuat otomatis berdasarkan gambar matriks "
-        "yang diberikan. Tidak perlu menambahkan mesin satu per satu."
-    )
-
+    st.caption("Seluruh Equipment for Working dimuat otomatis dari lima sheet Excel Packing House.")
     machines = get_machines()
     st.subheader("🟨 Equipment for Working")
-    working_catalog = pd.DataFrame(WORKING_EQUIPMENT_CATALOG).rename(columns={
-        "machine_id": "Equipment ID",
-        "machine_name": "Equipment for Working",
-        "points": "Jumlah titik Tag & Padlock",
-    })
-    st.dataframe(working_catalog, use_container_width=True, hide_index=True)
-
-    st.caption(
-        "Daftar di atas juga otomatis dimasukkan ke database Supabase pada "
-        "tabel machines, sehingga langsung tersedia pada pilihan mesin di Start LOTOTO."
-    )
-
-    st.divider()
-    st.subheader("📋 Data Mesin yang Tersedia untuk Start LOTOTO")
     if not machines.empty:
-        st.dataframe(
-            machines[["machine_id", "machine_name", "area", "energy_source", "isolation_point", "status"]],
-            use_container_width=True,
-            hide_index=True,
-        )
+        working_view = machines[["machine_id", "machine_name", "area", "tag_padlock_total"]].copy()
+        working_view.columns = ["Equipment ID", "Equipment for Working", "Area", "Jumlah titik Tag & Padlock"]
+        st.dataframe(working_view, use_container_width=True, hide_index=True)
+        st.caption(f"Total {len(working_view)} equipment dimuat dari workbook.")
     else:
-        st.warning("Data Equipment for Working belum berhasil dimuat.")
-
+        st.warning("Data Equipment for Working belum tersedia.")
     st.divider()
-    st.subheader("🟨 Equipment for LOTOTO — Mapping")
-    st.caption(
-        "Matriks ini digunakan otomatis saat mesin Equipment for Working dipilih "
-        "pada Start LOTOTO. Pemetaan sementara mengikuti tanda yang terlihat "
-        "pada gambar sumber."
-    )
-    lototo_catalog_rows = []
-    for working_id, lototo_equipment in WORKING_TO_LOTOTO.items():
-        catalog_item = next(
-            (item for item in WORKING_EQUIPMENT_CATALOG if item["machine_id"] == working_id),
-            None,
-        )
-        working_name = catalog_item["machine_name"] if catalog_item else working_id
-        row = {
-            "Equipment for Working": f"{working_id} — {working_name}",
-            "Jumlah titik Tag & Padlock": catalog_item["points"] if catalog_item else "-",
-        }
-        for equipment_name in LOTOTO_MATRIX_COLUMNS:
-            row[equipment_name] = "✓" if equipment_name in lototo_equipment else ""
-        lototo_catalog_rows.append(row)
-    st.dataframe(
-        pd.DataFrame(lototo_catalog_rows),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# ============================================================
-# START LOTOTO
-# ============================================================
+    st.subheader("🟨 Equipment for LOTOTO")
+    st.caption("Equipment for LOTOTO memakai ID dan nama master yang sama dengan Equipment for Working; relasi hanya berisi Equipment for LOTOTO yang diberi tanda V pada baris Equipment for Working di Excel.")
+    st.info("Buka menu LOTOTO Matrix untuk melihat seluruh relasi dan status setiap equipment.")
 
 elif menu == "LOTOTO Matrix":
 
     st.title("🟨 LOTOTO Matrix")
     st.caption(
-        "Equipment for LOTOTO dikelompokkan per Equipment for Working. "
-        "Buka grup mesin untuk melihat equipment LOTOTO yang otomatis terindikasi (✓)."
+        "Setiap Equipment for Working ditampilkan sebagai satu grup, "
+        "dengan hanya Equipment for LOTOTO yang memiliki tanda V pada baris tersebut di workbook Excel."
     )
-    # Each Working machine has its own collapsible group so the user does not
-    # need to horizontally scroll a wide matrix table.
+
+    catalog_by_id = {str(item["machine_id"]): item for item in WORKING_EQUIPMENT_CATALOG}
+    total_relations = sum(len(WORKING_TO_LOTOTO.get(str(item["machine_id"]), [])) for item in WORKING_EQUIPMENT_CATALOG)
+    st.metric("Total relasi Working → LOTOTO", total_relations)
+    st.caption("ID dan nama Equipment for LOTOTO ditampilkan pada setiap grup. Status mengikuti catatan LOTOTO per equipment.")
+
     for item in WORKING_EQUIPMENT_CATALOG:
-        machine_id = item["machine_id"]
-        machine_name = item["machine_name"]
-        equipment_list = WORKING_TO_LOTOTO.get(machine_id, [])
-        with st.expander(f"🏭 {machine_name}  |  {machine_id}", expanded=False):
-            st.write(f"**Jumlah titik Tag & Padlock:** {item['points']}")
-            if equipment_list:
-                for equipment in LOTOTO_MATRIX_COLUMNS:
-                    if equipment in equipment_list:
-                        st.checkbox(
-                            equipment,
-                            value=True,
-                            disabled=True,
-                            key=f"matrix_view_{machine_id}_{equipment}"
-                        )
+        working_id = str(item["machine_id"])
+        working_name = item["machine_name"]
+        mapped_ids = [str(eid) for eid in get_mapped_equipment(working_id)]
+
+        with st.expander(
+            f"🏭 {working_id} — {working_name} | {len(mapped_ids)} Equipment for LOTOTO",
+            expanded=False
+        ):
+            st.markdown(f"**Equipment for Working:** `{working_id}` — {working_name}")
+            st.caption(
+                f"Area: {item.get('area', '-')} · Jumlah titik Tag & Padlock: "
+                f"{item.get('points') if item.get('points') is not None else 'Tidak tercantum di Excel'}"
+            )
+
+            if not mapped_ids:
+                st.warning("Belum ada Equipment for LOTOTO yang dipetakan pada baris ini di Excel.")
+                continue
+
+            # Pastikan item status tersedia untuk record LOTOTO terakhir dari Working ini.
+            latest_parent = pd.read_sql_query(
+                "SELECT id, work_status, start_time FROM public.lototo WHERE machine_id = %s ORDER BY id DESC LIMIT 1",
+                conn, params=(working_id,)
+            )
+            if not latest_parent.empty:
+                ensure_lototo_equipment_items(
+                    int(latest_parent.iloc[0]["id"]), working_id,
+                    latest_parent.iloc[0]["start_time"]
+                )
+
+            # Tampilkan status terbaru untuk setiap Equipment for LOTOTO lintas kelompok Working.
+            global_states = pd.read_sql_query(
+                """
+                SELECT DISTINCT ON (ei.equipment_machine_id)
+                    ei.equipment_machine_id, ei.status
+                FROM public.lototo_equipment_items ei
+                JOIN public.lototo l ON l.id = ei.lototo_id
+                WHERE ei.equipment_machine_id = ANY(%s)
+                ORDER BY ei.equipment_machine_id, ei.id DESC
+                """,
+                conn, params=(mapped_ids,)
+            )
+            status_by_equipment = {
+                str(row["equipment_machine_id"]): str(row["status"])
+                for _, row in global_states.iterrows()
+            }
+
+            matrix_rows = []
+            for equipment_id in mapped_ids:
+                equipment = catalog_by_id.get(equipment_id, {})
+                equipment_name = equipment.get("machine_name", "Nama equipment belum tersedia")
+                raw_status = status_by_equipment.get(equipment_id, "BELUM DIMULAI")
+                status_label = {
+                    "ACTIVE": "🟢 ACTIVE / TERISOLASI",
+                    "COMPLETED": "⚪ ENDED",
+                    "BELUM DIMULAI": "— BELUM DIMULAI"
+                }.get(raw_status, raw_status)
+                matrix_rows.append({
+                    "Equipment ID": equipment_id,
+                    "Equipment for LOTOTO": equipment_name,
+                    "Jumlah titik Tag & Padlock": equipment.get("points") if equipment else None,
+                    "Status": status_label
+                })
+
+            matrix_df = pd.DataFrame(matrix_rows)
+            def shade_ended_equipment(row):
+                if row["Status"] == "⚪ ENDED":
+                    return ["background-color: #d1d5db; color: #6b7280"] * len(row)
+                return [""] * len(row)
+
+            st.dataframe(
+                matrix_df.style.apply(shade_ended_equipment, axis=1),
+                use_container_width=True,
+                hide_index=True
+            )
+
+            states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
+            if states and all(state == "ACTIVE" for state in states):
+                st.success("Seluruh Equipment for LOTOTO pada Working ini sedang ACTIVE/terisolasi.")
+            elif states and all(state == "COMPLETED" for state in states):
+                st.info("Seluruh Equipment for LOTOTO pada Working ini sudah ENDED.")
+            elif any(state == "COMPLETED" for state in states) and any(state == "ACTIVE" for state in states):
+                st.warning("Sebagian Equipment for LOTOTO sudah ENDED (abu-abu), sementara equipment lainnya masih ACTIVE.")
+            elif any(state == "ACTIVE" for state in states):
+                st.info("Sebagian Equipment for LOTOTO sudah ACTIVE; equipment lainnya belum dimulai.")
             else:
-                st.warning("Mapping Equipment for LOTOTO belum tersedia untuk mesin ini.")
-    st.info(
-        "Catatan: pemetaan sementara hanya mencakup 5 baris Working yang terlihat "
-        "pada gambar sumber. Mohon verifikasi matriks lengkap sebelum penggunaan operasional."
+                st.caption("Belum ada aktivitas LOTOTO untuk equipment dalam grup ini.")
+
+    st.caption(
+        "Sumber mapping: workbook lototo matrix packing house.xlsx. "
+        "Periksa kembali mapping dan titik isolasi terhadap matriks resmi serta kondisi lapangan sebelum pekerjaan dilakukan."
     )
 
 elif menu == "Start LOTOTO":
@@ -1074,8 +1465,8 @@ elif menu == "Start LOTOTO":
             selected_machine = st.selectbox(
                 "Pilih Equipment for Working",
                 machine_options,
-                format_func=lambda machine_id: machine_name_by_id.get(
-                    str(machine_id), str(machine_id)
+                format_func=lambda machine_id: (
+                    f"{machine_id} — {machine_name_by_id.get(str(machine_id), str(machine_id))}"
                 ),
             )
 
@@ -1274,11 +1665,18 @@ elif menu == "Start LOTOTO":
             # LOTOTO MATRIX - AUTOMATIC SELECTION IN BACKGROUND
             # Based on selected Equipment for Working. The separate Matrix
             # page remains available for viewing; no duplicate checkboxes here.
-            selected_working_name = machine_name_by_id.get(
-                str(selected_machine), str(selected_machine)
-            )
-            mapped_equipment = WORKING_TO_LOTOTO.get(str(selected_machine), [])
+            selected_working_name = machine_name_by_id.get(str(selected_machine), str(selected_machine))
+            mapped_equipment = get_mapped_equipment(selected_machine)
             lototo_equipment_selected = list(mapped_equipment)
+            st.subheader("Equipment for LOTOTO yang otomatis dipetakan")
+            if lototo_equipment_selected:
+                catalog_names = {x["machine_id"]: x["machine_name"] for x in WORKING_EQUIPMENT_CATALOG}
+                st.dataframe(pd.DataFrame([
+                    {"Equipment ID": eid, "Equipment for LOTOTO": catalog_names.get(eid, eid), "Indikasi": "✓ OTOMATIS"}
+                    for eid in lototo_equipment_selected
+                ]), use_container_width=True, hide_index=True)
+            else:
+                st.warning("Belum ada pemetaan LOTOTO untuk Equipment for Working ini.")
 
             # ------------------------------------------------
             # START
@@ -1371,9 +1769,30 @@ elif menu == "Start LOTOTO":
 
                 if active_machine:
                     errors.append(
-                        "Mesin tersebut masih memiliki "
-                        "LOTOTO ACTIVE."
+                        "Mesin tersebut masih memiliki LOTOTO ACTIVE."
                     )
+
+                # Cegah dua pekerjaan aktif mengunci equipment LOTOTO fisik yang sama.
+                if lototo_equipment_selected:
+                    cursor.execute(
+                        """
+                        SELECT ei.equipment_machine_id, l.machine_id
+                        FROM public.lototo_equipment_items ei
+                        JOIN public.lototo l ON l.id = ei.lototo_id
+                        WHERE ei.equipment_machine_id = ANY(%s)
+                          AND ei.status = 'ACTIVE'
+                          AND l.work_status = 'ACTIVE'
+                          AND l.machine_id <> %s
+                        LIMIT 1
+                        """,
+                        (lototo_equipment_selected, selected_machine)
+                    )
+                    overlapping_active = cursor.fetchone()
+                    if overlapping_active:
+                        errors.append(
+                            f"Equipment LOTOTO {overlapping_active[0]} sedang ACTIVE "
+                            f"dalam pekerjaan Working {overlapping_active[1]}."
+                        )
 
                 if errors:
 
@@ -1482,6 +1901,7 @@ elif menu == "Start LOTOTO":
                         VALUES (
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                         )
+                        RETURNING id
                         """,
                         (
                             work_order,
@@ -1520,6 +1940,17 @@ elif menu == "Start LOTOTO":
                             "ACTIVE"
                         )
                     )
+                    new_lototo_id = cursor.fetchone()[0]
+                    for equipment_id in lototo_equipment_selected:
+                        cursor.execute(
+                            """
+                            INSERT INTO public.lototo_equipment_items
+                                (lototo_id, working_machine_id, equipment_machine_id, status, started_at)
+                            VALUES (%s, %s, %s, 'ACTIVE', %s)
+                            ON CONFLICT (lototo_id, equipment_machine_id) DO NOTHING
+                            """,
+                            (new_lototo_id, selected_machine, equipment_id, start_time)
+                        )
 
                     conn.commit()
 
