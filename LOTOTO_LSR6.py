@@ -7,6 +7,9 @@ import json
 import pandas as pd
 import os
 import uuid
+import hashlib
+import secrets
+import hmac
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -314,6 +317,17 @@ def initialize_database(database_url):
     )
     """)
     db_cursor.execute("CREATE INDEX IF NOT EXISTS idx_lototo_equipment_parent ON public.lototo_equipment_items (lototo_id, status)")
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS public.app_users (
+        id BIGSERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        full_name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        password_salt TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        is_active BOOLEAN NOT NULL DEFAULT TRUE
+    )
+    """)
     db_conn.commit()
 
     migration_columns = {
@@ -827,8 +841,134 @@ def seed_working_equipment():
     conn.commit()
     seed_cursor.close()
 
-# Sinkronkan master equipment dan relasi berdasarkan tanda V dari workbook saat app mulai.
+# ============================================================
+# USER AUTHENTICATION (Sign Up / Sign In)
+# Passwords are stored as PBKDF2-HMAC-SHA256 hashes, never as plain text.
+# ============================================================
+AUTH_ITERATIONS = 310_000
+
+
+def hash_user_password(password: str, salt_hex: str | None = None):
+    salt = bytes.fromhex(salt_hex) if salt_hex else secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, AUTH_ITERATIONS
+    )
+    return salt.hex(), digest.hex()
+
+
+def verify_user_password(password: str, salt_hex: str, expected_hash: str) -> bool:
+    _, candidate_hash = hash_user_password(password, salt_hex)
+    return hmac.compare_digest(candidate_hash, expected_hash)
+
+
+def create_app_user(username: str, full_name: str, password: str):
+    salt_hex, password_hash = hash_user_password(password)
+    auth_cursor = conn.cursor()
+    try:
+        auth_cursor.execute(
+            """INSERT INTO public.app_users
+               (username, full_name, password_hash, password_salt)
+               VALUES (%s, %s, %s, %s)""",
+            (username, full_name, password_hash, salt_hex)
+        )
+        conn.commit()
+        return True, "Akun berhasil dibuat. Silakan sign in."
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        return False, "Username sudah digunakan. Silakan pilih username lain."
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        auth_cursor.close()
+
+
+def authenticate_app_user(username: str, password: str):
+    auth_cursor = conn.cursor()
+    try:
+        auth_cursor.execute(
+            """SELECT id, username, full_name, password_hash, password_salt
+               FROM public.app_users
+               WHERE username = %s AND is_active = TRUE""",
+            (username,)
+        )
+        user_row = auth_cursor.fetchone()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        auth_cursor.close()
+
+    if not user_row:
+        return None
+    if not verify_user_password(password, user_row[4], user_row[3]):
+        return None
+    return {"id": user_row[0], "username": user_row[1], "full_name": user_row[2]}
+
+
+if "authenticated_user" not in st.session_state:
+    st.session_state.authenticated_user = None
+
+if st.session_state.authenticated_user is None:
+    st.title("🔒 LOTOTO Safety Management System")
+    st.caption("Silakan sign in untuk mengakses Dashboard dan fitur LOTOTO.")
+    login_tab, signup_tab = st.tabs(["Sign In", "Sign Up"])
+
+    with login_tab:
+        with st.form("lototo_signin_form", clear_on_submit=False):
+            login_username = st.text_input("Username", key="signin_username")
+            login_password = st.text_input("Password", type="password", key="signin_password")
+            login_submit = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+        if login_submit:
+            if not login_username.strip() or not login_password:
+                st.error("Masukkan username dan password.")
+            else:
+                try:
+                    logged_user = authenticate_app_user(login_username.strip().lower(), login_password)
+                    if logged_user:
+                        st.session_state.authenticated_user = logged_user
+                        st.success("Sign in berhasil. Membuka aplikasi LOTOTO...")
+                        st.rerun()
+                    else:
+                        st.error("Username atau password salah, atau akun tidak aktif.")
+                except Exception as exc:
+                    st.error(f"Gagal memeriksa akun: {exc}")
+
+    with signup_tab:
+        with st.form("lototo_signup_form", clear_on_submit=True):
+            signup_name = st.text_input("Nama lengkap", key="signup_full_name")
+            signup_username = st.text_input("Buat username", key="signup_username")
+            signup_password = st.text_input("Buat password", type="password", key="signup_password")
+            signup_confirm = st.text_input("Konfirmasi password", type="password", key="signup_confirm")
+            signup_submit = st.form_submit_button("Sign Up", type="primary", use_container_width=True)
+        if signup_submit:
+            clean_name = signup_name.strip()
+            clean_username = signup_username.strip().lower()
+            if not clean_name or not clean_username or not signup_password:
+                st.error("Semua kolom wajib diisi.")
+            elif len(clean_username) < 4 or not clean_username.replace("_", "").replace(".", "").isalnum():
+                st.error("Username minimal 4 karakter; gunakan huruf, angka, titik, atau underscore.")
+            elif len(signup_password) < 10:
+                st.error("Password minimal 10 karakter.")
+            elif signup_password != signup_confirm:
+                st.error("Konfirmasi password tidak cocok.")
+            else:
+                try:
+                    created, message = create_app_user(clean_username, clean_name, signup_password)
+                    if created:
+                        st.success(message + " Silakan buka tab Sign In.")
+                    else:
+                        st.error(message)
+                except Exception as exc:
+                    st.error(f"Gagal membuat akun: {exc}")
+
+    st.info("Belum punya akun? Buat akun melalui tab Sign Up, lalu masuk menggunakan username dan password tersebut.")
+    st.stop()
+
+# User is authenticated; only now seed equipment data and expose app navigation.
 seed_working_equipment()
+
 
 def get_mapped_equipment(working_machine_id):
     mapping_cursor = conn.cursor()
@@ -930,6 +1070,11 @@ def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
 
 st.sidebar.title("🔒 LSR 6")
 st.sidebar.caption("Energy Isolation - LOTOTO")
+st.sidebar.caption(f"Login: {st.session_state.authenticated_user['full_name']}")
+if st.sidebar.button("Sign Out", use_container_width=True):
+    st.session_state.authenticated_user = None
+    st.query_params.clear()
+    st.rerun()
 
 menu = st.sidebar.selectbox(
     "Menu",
