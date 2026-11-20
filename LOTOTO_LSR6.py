@@ -34,6 +34,145 @@ st.set_page_config(
     layout="wide"
 )
 
+
+
+# ============================================================
+# UI THEME - LIGHT INDUSTRIAL / SAFETY DASHBOARD
+# ============================================================
+st.markdown("""
+<style>
+:root {
+    --lototo-ink: #183247;
+    --lototo-muted: #667b8b;
+    --lototo-teal: #168b83;
+    --lototo-teal-dark: #0f6f6a;
+    --lototo-amber: #f2ad45;
+    --lototo-bg: #f3f7fa;
+    --lototo-card: #ffffff;
+    --lototo-line: #e1eaf0;
+}
+.stApp {
+    background:
+        radial-gradient(circle at 92% 2%, rgba(22,139,131,.08), transparent 25rem),
+        linear-gradient(180deg, #f7fafc 0%, #f1f6f9 100%);
+    color: var(--lototo-ink);
+}
+[data-testid="stHeader"] { background: rgba(247,250,252,.82); }
+.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1500px; }
+h1, h2, h3 { color: var(--lototo-ink); letter-spacing: -.025em; }
+h1 { font-weight: 800 !important; }
+h2, h3 { font-weight: 750 !important; }
+p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #eaf3f5 0%, #f5f8fa 100%);
+    border-right: 1px solid #dce8ed;
+}
+[data-testid="stSidebar"] > div:first-child { padding-top: 1.3rem; }
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 { color: #17384a; }
+[data-testid="stSidebar"] [data-testid="stSelectbox"] > label {
+    color: #456173; font-weight: 700;
+}
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stNumberInput"] input,
+[data-testid="stDateInput"] input,
+[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+    background: #fff !important;
+    border-color: #d7e3e9 !important;
+    border-radius: 11px !important;
+}
+.stButton > button, .stFormSubmitButton > button {
+    border-radius: 11px;
+    border: 1px solid #168b83;
+    background: linear-gradient(135deg, #168b83, #11766f);
+    color: white;
+    font-weight: 700;
+    padding: .55rem 1rem;
+    box-shadow: 0 5px 14px rgba(22,139,131,.13);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.stButton > button:hover, .stFormSubmitButton > button:hover {
+    border-color: #0f6f6a; color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(22,139,131,.2);
+}
+.stButton > button[kind="secondary"] {
+    background: #fff; color: #24616a; border-color: #d5e3e8; box-shadow: none;
+}
+div[data-testid="stMetric"] {
+    background: #fff; border: 1px solid var(--lototo-line);
+    border-radius: 16px; padding: 17px 18px;
+    box-shadow: 0 5px 18px rgba(29,66,85,.045);
+}
+div[data-testid="stMetricLabel"] { color: #627b89; font-weight: 650; }
+div[data-testid="stMetricValue"] { color: #17384a; font-weight: 800; }
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    gap: 8px; background: #edf3f5; padding: 6px; border-radius: 13px;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    border-radius: 9px; color: #557080; font-weight: 700;
+}
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background: #fff; color: #11766f; box-shadow: 0 2px 8px rgba(20,55,70,.08);
+}
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+    border: 1px solid #e1eaf0; border-radius: 13px; overflow: hidden;
+}
+hr { border-color: #dce7ec; }
+div[data-testid="stAlert"] { border-radius: 12px; }
+.lototo-brand {
+    background: linear-gradient(135deg, #153c50 0%, #187f7a 100%);
+    color: white; padding: 18px 18px 16px; border-radius: 17px;
+    box-shadow: 0 12px 26px rgba(21,60,80,.16); margin-bottom: 18px;
+}
+.lototo-brand .brand-kicker {
+    color: #bfe8e2; font-size: .72rem; font-weight: 800;
+    letter-spacing: .13em; text-transform: uppercase;
+}
+.lototo-brand .brand-title {
+    color: white; font-size: 1.45rem; font-weight: 850;
+    letter-spacing: -.035em; margin-top: 5px;
+}
+.lototo-brand .brand-sub { color: #d5e8ed; font-size: .84rem; margin-top: 3px; }
+.lototo-login-shell {
+    background: rgba(255,255,255,.92); border: 1px solid #e0eaf0;
+    border-radius: 22px; padding: 1.6rem 1.6rem 1.25rem;
+    box-shadow: 0 18px 50px rgba(31,69,88,.09);
+}
+.lototo-login-hero {
+    background: linear-gradient(135deg, #173e52 0%, #187f7a 100%);
+    border-radius: 20px; padding: 28px 28px 25px; color: white;
+    min-height: 275px; display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 14px 30px rgba(20,69,83,.17);
+}
+.lototo-login-hero .eyebrow {
+    color: #b9e9df; font-size: .72rem; font-weight: 800; letter-spacing: .15em;
+}
+.lototo-login-hero h2 { color: white !important; font-size: 2rem; line-height: 1.12; margin: 13px 0 10px; }
+.lototo-login-hero p { color: #d9e9ec !important; line-height: 1.55; }
+.lototo-login-hero .hero-foot {
+    border-top: 1px solid rgba(255,255,255,.2); padding-top: 14px;
+    color: #d9e9ec; font-size: .82rem;
+}
+.lototo-section-kicker {
+    color: #168b83; text-transform: uppercase; letter-spacing: .12em;
+    font-size: .72rem; font-weight: 850;
+}
+[data-testid="stForm"] {
+    border: 1px solid #e3edf1; border-radius: 15px;
+    padding: 1.1rem; background: #fff;
+}
+@media (max-width: 800px) {
+    .block-container { padding-top: 1rem; }
+    .lototo-login-hero { min-height: 190px; margin-bottom: 1rem; }
+    .lototo-login-hero h2 { font-size: 1.55rem; }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ============================================================
 # SUPABASE CONFIGURATION
 # Local: .streamlit/secrets.toml
@@ -911,59 +1050,77 @@ if "authenticated_user" not in st.session_state:
     st.session_state.authenticated_user = None
 
 if st.session_state.authenticated_user is None:
-    st.title("🔒 LOTOTO Safety Management System")
-    st.caption("Silakan sign in untuk mengakses Dashboard dan fitur LOTOTO.")
-    login_tab, signup_tab = st.tabs(["Sign In", "Sign Up"])
+    left_space, hero_col, auth_col, right_space = st.columns([0.45, 1.0, 1.05, 0.45], gap="large")
+    with hero_col:
+        st.markdown("""
+        <div class="lototo-login-hero">
+          <div>
+            <div class="eyebrow">SAFETY • CONTROL • COMPLIANCE</div>
+            <h2>LOTOTO<br>Safety System</h2>
+            <p>Energy isolation management untuk membantu memastikan setiap pekerjaan dilakukan dengan proses isolasi energi yang terkontrol.</p>
+          </div>
+          <div class="hero-foot">🔒 Lock Out&nbsp;&nbsp; • &nbsp;&nbsp;🏷️ Tag Out&nbsp;&nbsp; • &nbsp;&nbsp;⚙️ Try Out</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with auth_col:
+        st.markdown('<div class="lototo-section-kicker">MEMBER ACCESS</div>', unsafe_allow_html=True)
+        st.markdown("## Welcome")
+        st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
+        login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
 
-    with login_tab:
-        with st.form("lototo_signin_form", clear_on_submit=False):
-            login_username = st.text_input("Username", key="signin_username")
-            login_password = st.text_input("Password", type="password", key="signin_password")
-            login_submit = st.form_submit_button("Sign In", type="primary", use_container_width=True)
-        if login_submit:
-            if not login_username.strip() or not login_password:
-                st.error("Masukkan username dan password.")
-            else:
-                try:
-                    logged_user = authenticate_app_user(login_username.strip().lower(), login_password)
-                    if logged_user:
-                        st.session_state.authenticated_user = logged_user
-                        st.success("Sign in berhasil. Membuka aplikasi LOTOTO...")
-                        st.rerun()
-                    else:
-                        st.error("Username atau password salah, atau akun tidak aktif.")
-                except Exception as exc:
-                    st.error(f"Gagal memeriksa akun: {exc}")
+        with login_tab:
+            with st.form("lototo_signin_form", clear_on_submit=False):
+                login_username = st.text_input("Username", key="signin_username")
+                login_password = st.text_input("Password", type="password", key="signin_password")
+                login_submit = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+            if login_submit:
+                if not login_username.strip() or not login_password:
+                    st.error("Masukkan username dan password.")
+                else:
+                    try:
+                        logged_user = authenticate_app_user(login_username.strip().lower(), login_password)
+                        if logged_user:
+                            st.session_state.authenticated_user = logged_user
+                            st.success("Sign in berhasil. Membuka aplikasi LOTOTO...")
+                            st.rerun()
+                        else:
+                            st.error("Username atau password salah, atau akun tidak aktif.")
+                    except Exception as exc:
+                        st.error(f"Gagal memeriksa akun: {exc}")
 
-    with signup_tab:
-        with st.form("lototo_signup_form", clear_on_submit=True):
-            signup_name = st.text_input("Nama lengkap", key="signup_full_name")
-            signup_username = st.text_input("Buat username", key="signup_username")
-            signup_password = st.text_input("Buat password", type="password", key="signup_password")
-            signup_confirm = st.text_input("Konfirmasi password", type="password", key="signup_confirm")
-            signup_submit = st.form_submit_button("Sign Up", type="primary", use_container_width=True)
-        if signup_submit:
-            clean_name = signup_name.strip()
-            clean_username = signup_username.strip().lower()
-            if not clean_name or not clean_username or not signup_password:
-                st.error("Semua kolom wajib diisi.")
-            elif len(clean_username) < 4 or not clean_username.replace("_", "").replace(".", "").isalnum():
-                st.error("Username minimal 4 karakter; gunakan huruf, angka, titik, atau underscore.")
-            elif len(signup_password) < 10:
-                st.error("Password minimal 10 karakter.")
-            elif signup_password != signup_confirm:
-                st.error("Konfirmasi password tidak cocok.")
-            else:
-                try:
-                    created, message = create_app_user(clean_username, clean_name, signup_password)
-                    if created:
-                        st.success(message + " Silakan buka tab Sign In.")
-                    else:
-                        st.error(message)
-                except Exception as exc:
-                    st.error(f"Gagal membuat akun: {exc}")
+        with signup_tab:
+            with st.form("lototo_signup_form", clear_on_submit=True):
+                signup_name = st.text_input("Nama lengkap", key="signup_full_name")
+                signup_username = st.text_input("Buat username", key="signup_username")
+                signup_password = st.text_input("Buat password", type="password", key="signup_password")
+                signup_confirm = st.text_input("Konfirmasi password", type="password", key="signup_confirm")
+                signup_submit = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+            if signup_submit:
+                clean_name = signup_name.strip()
+                clean_username = signup_username.strip().lower()
+                if not clean_name or not clean_username or not signup_password:
+                    st.error("Semua kolom wajib diisi.")
+                elif len(clean_username) < 4 or not clean_username.replace("_", "").replace(".", "").isalnum():
+                    st.error("Username minimal 4 karakter; gunakan huruf, angka, titik, atau underscore.")
+                elif len(signup_password) < 10:
+                    st.error("Password minimal 10 karakter.")
+                elif signup_password != signup_confirm:
+                    st.error("Konfirmasi password tidak cocok.")
+                else:
+                    try:
+                        created, message = create_app_user(clean_username, clean_name, signup_password)
+                        if created:
+                            st.success(message + " Silakan buka tab Sign In.")
+                        else:
+                            st.error(message)
+                    except Exception as exc:
+                        st.error(f"Gagal membuat akun: {exc}")
 
-    st.info("Belum punya akun? Buat akun melalui tab Sign Up, lalu masuk menggunakan username dan password tersebut.")
+    st.markdown(
+        "<div style='text-align:center;color:#8094a0;font-size:.78rem;margin-top:1.1rem;'>"
+        "LSR 6 • Energy Isolation Management</div>",
+        unsafe_allow_html=True
+    )
     st.stop()
 
 # User is authenticated; only now seed equipment data and expose app navigation.
@@ -1068,16 +1225,27 @@ def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
 # HEADER
 # ============================================================
 
-st.sidebar.title("🔒 LSR 6")
-st.sidebar.caption("Energy Isolation - LOTOTO")
-st.sidebar.caption(f"Login: {st.session_state.authenticated_user['full_name']}")
+st.sidebar.markdown("""
+<div class="lototo-brand">
+  <div class="brand-kicker">Safety Management</div>
+  <div class="brand-title">🔒 LOTOTO</div>
+  <div class="brand-sub">LSR 6 • Energy Isolation</div>
+</div>
+""", unsafe_allow_html=True)
+st.sidebar.markdown("**SIGNED IN AS**")
+st.sidebar.markdown(f"👤 {st.session_state.authenticated_user['full_name']}")
 if st.sidebar.button("Sign Out", use_container_width=True):
     st.session_state.authenticated_user = None
     st.query_params.clear()
     st.rerun()
 
+st.sidebar.markdown(
+    "<div style='font-size:.72rem;font-weight:850;color:#6d8795;"
+    "letter-spacing:.12em;margin:18px 0 5px;'>WORKSPACE MENU</div>",
+    unsafe_allow_html=True
+)
 menu = st.sidebar.selectbox(
-    "Menu",
+    "Pilih halaman",
     [
         "Dashboard",
         "Data Mesin",
@@ -1525,182 +1693,108 @@ elif menu == "Data Mesin":
 
 elif menu == "LOTOTO Matrix":
 
-    # --------------------------------------------------------
-    # LOTOTO MATRIX - modern industrial dashboard presentation
-    # --------------------------------------------------------
-    st.markdown("""
-    <style>
-    .matrix-hero {
-        padding: 24px 28px; border-radius: 18px; margin: 2px 0 18px 0;
-        background: linear-gradient(115deg, #101d35 0%, #183b5b 62%, #d97706 145%);
-        color: #ffffff; border: 1px solid rgba(255,255,255,.08);
-    }
-    .matrix-hero h2 { color: #fff !important; margin: 0 0 6px 0; font-size: 1.65rem; }
-    .matrix-hero p { color: #dbeafe !important; margin: 0; font-size: .94rem; }
-    .matrix-kicker { color:#fbbf24; text-transform:uppercase; letter-spacing:2px;
-        font-size:.72rem; font-weight:800; margin-bottom:8px; }
-    div[data-testid="stMetric"] { background: var(--secondary-background-color);
-        border: 1px solid rgba(128,128,128,.18); padding: 13px 16px;
-        border-radius: 14px; }
-    .matrix-section-label { font-size:.76rem; font-weight:800; letter-spacing:1.2px;
-        color:#d97706; text-transform:uppercase; margin: 8px 0 4px 0; }
-    .matrix-note { color: var(--text-color); opacity:.72; font-size:.84rem; }
-    div[data-testid="stExpander"] { border:1px solid rgba(128,128,128,.22);
-        border-radius:14px; overflow:hidden; margin-bottom:9px; }
-    div[data-testid="stExpander"] details summary { font-weight:650; }
-    </style>
-    <div class="matrix-hero">
-      <div class="matrix-kicker">LSR 6 · Energy Isolation Control</div>
-      <h2>LOTOTO Equipment Matrix</h2>
-      <p>Monitoring hubungan Equipment for Working dengan titik isolasi Equipment for LOTOTO.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("🟨 LOTOTO Matrix")
+    st.caption(
+        "Setiap Equipment for Working ditampilkan sebagai satu grup, "
+        "dengan hanya Equipment for LOTOTO yang memiliki tanda V pada baris tersebut di workbook Excel."
+    )
 
     catalog_by_id = {str(item["machine_id"]): item for item in WORKING_EQUIPMENT_CATALOG}
     total_relations = sum(len(WORKING_TO_LOTOTO.get(str(item["machine_id"]), [])) for item in WORKING_EQUIPMENT_CATALOG)
+    st.metric("Total relasi Working → LOTOTO", total_relations)
+    st.caption("ID dan nama Equipment for LOTOTO ditampilkan pada setiap grup. Status mengikuti catatan LOTOTO per equipment.")
 
-    # Prepare the latest equipment status once per mapped LOTOTO equipment.
-    all_mapped_ids = sorted({
-        str(eid)
-        for item in WORKING_EQUIPMENT_CATALOG
-        for eid in get_mapped_equipment(str(item["machine_id"]))
-    })
-    global_states = read_sql_df(
-        """
-        SELECT DISTINCT ON (ei.equipment_machine_id)
-            ei.equipment_machine_id, ei.status
-        FROM public.lototo_equipment_items ei
-        JOIN public.lototo l ON l.id = ei.lototo_id
-        WHERE ei.equipment_machine_id = ANY(%s)
-        ORDER BY ei.equipment_machine_id, ei.id DESC
-        """,
-        params=(all_mapped_ids,)
-    ) if all_mapped_ids else pd.DataFrame(columns=["equipment_machine_id", "status"])
-    status_by_equipment = {
-        str(row["equipment_machine_id"]): str(row["status"])
-        for _, row in global_states.iterrows()
-    }
-
-    group_data = []
     for item in WORKING_EQUIPMENT_CATALOG:
         working_id = str(item["machine_id"])
-        mapped_ids = [str(eid) for eid in get_mapped_equipment(working_id)]
-        states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
-        if states and all(state == "ACTIVE" for state in states):
-            group_status = "ACTIVE"
-        elif states and all(state == "COMPLETED" for state in states):
-            group_status = "ENDED"
-        elif any(state == "ACTIVE" for state in states):
-            group_status = "PARTIAL"
-        else:
-            group_status = "NOT STARTED"
-        group_data.append({"item": item, "working_id": working_id,
-                           "mapped_ids": mapped_ids, "states": states,
-                           "group_status": group_status})
-
-    active_count = sum(1 for state in status_by_equipment.values() if state == "ACTIVE")
-    ended_count = sum(1 for state in status_by_equipment.values() if state == "COMPLETED")
-    not_started_count = max(len(all_mapped_ids) - active_count - ended_count, 0)
-
-    metric_cols = st.columns(4)
-    metric_cols[0].metric("Working Equipment", f"{len(WORKING_EQUIPMENT_CATALOG):,}", "Equipment terdaftar")
-    metric_cols[1].metric("LOTOTO Equipment", f"{len(all_mapped_ids):,}", f"{total_relations:,} relasi mapping")
-    metric_cols[2].metric("ACTIVE", f"{active_count:,}", "Sedang terisolasi")
-    metric_cols[3].metric("ENDED", f"{ended_count:,}", f"{not_started_count:,} belum dimulai")
-
-    st.markdown('<div class="matrix-section-label">Explore equipment matrix</div>', unsafe_allow_html=True)
-    filter_cols = st.columns([2.2, 1.1, 1.1])
-    search_term = filter_cols[0].text_input(
-        "Cari equipment", placeholder="Cari ID atau nama equipment...", key="matrix_search"
-    ).strip().lower()
-    area_options = sorted({str(g["item"].get("area", "-")) for g in group_data})
-    selected_area = filter_cols[1].selectbox("Area", ["Semua Area"] + area_options, key="matrix_area_filter")
-    status_options = ["Semua Status", "ACTIVE", "PARTIAL", "ENDED", "NOT STARTED"]
-    selected_status = filter_cols[2].selectbox("Status", status_options, key="matrix_status_filter")
-
-    visible_groups = []
-    for group in group_data:
-        item = group["item"]
-        searchable = f"{group['working_id']} {item.get('machine_name', '')}".lower()
-        if search_term and search_term not in searchable and not any(
-            search_term in f"{eid} {catalog_by_id.get(eid, {}).get('machine_name', '')}".lower()
-            for eid in group["mapped_ids"]
-        ):
-            continue
-        if selected_area != "Semua Area" and str(item.get("area", "-")) != selected_area:
-            continue
-        if selected_status != "Semua Status" and group["group_status"] != selected_status:
-            continue
-        visible_groups.append(group)
-
-    st.caption(f"Menampilkan {len(visible_groups)} dari {len(group_data)} Working Equipment")
-    if not visible_groups:
-        st.info("Tidak ada equipment yang cocok dengan pencarian atau filter tersebut.")
-
-    status_badges = {
-        "ACTIVE": "🟢 ACTIVE / TERISOLASI",
-        "COMPLETED": "⚪ ENDED",
-        "BELUM DIMULAI": "— BELUM DIMULAI"
-    }
-    for group in visible_groups:
-        item = group["item"]
-        working_id = group["working_id"]
         working_name = item["machine_name"]
-        mapped_ids = group["mapped_ids"]
-        states = group["states"]
-        group_status = group["group_status"]
-        status_icon = {"ACTIVE":"🟢", "PARTIAL":"🟠", "ENDED":"⚪", "NOT STARTED":"⚪"}[group_status]
-        status_text = {"ACTIVE":"ALL ACTIVE", "PARTIAL":"PARTIALLY ACTIVE", "ENDED":"ALL ENDED", "NOT STARTED":"NOT STARTED"}[group_status]
+        mapped_ids = [str(eid) for eid in get_mapped_equipment(working_id)]
 
         with st.expander(
-            f"{status_icon}  {working_id}  ·  {working_name}     |     {len(mapped_ids)} LOTOTO points  ·  {status_text}",
+            f"🏭 {working_id} — {working_name} | {len(mapped_ids)} Equipment for LOTOTO",
             expanded=False
         ):
-            info_cols = st.columns([1.6, 1, 1])
-            info_cols[0].markdown(f"**Equipment for Working**\n\n`{working_id}` · {working_name}")
-            info_cols[1].markdown(f"**Area**\n\n{item.get('area', '-')}")
-            points = item.get("points")
-            info_cols[2].markdown(f"**Tag & Padlock points**\n\n{points if points is not None else 'Tidak tercantum'}")
+            st.markdown(f"**Equipment for Working:** `{working_id}` — {working_name}")
+            st.caption(
+                f"Area: {item.get('area', '-')} · Jumlah titik Tag & Padlock: "
+                f"{item.get('points') if item.get('points') is not None else 'Tidak tercantum di Excel'}"
+            )
 
             if not mapped_ids:
                 st.warning("Belum ada Equipment for LOTOTO yang dipetakan pada baris ini di Excel.")
                 continue
 
+            # Pastikan item status tersedia untuk record LOTOTO terakhir dari Working ini.
+            latest_parent = read_sql_df(
+                "SELECT id, work_status, start_time FROM public.lototo WHERE machine_id = %s ORDER BY id DESC LIMIT 1",
+                params=(working_id,)
+            )
+            if not latest_parent.empty:
+                ensure_lototo_equipment_items(
+                    int(latest_parent.iloc[0]["id"]), working_id,
+                    latest_parent.iloc[0]["start_time"]
+                )
+
+            # Tampilkan status terbaru untuk setiap Equipment for LOTOTO lintas kelompok Working.
+            global_states = read_sql_df(
+                """
+                SELECT DISTINCT ON (ei.equipment_machine_id)
+                    ei.equipment_machine_id, ei.status
+                FROM public.lototo_equipment_items ei
+                JOIN public.lototo l ON l.id = ei.lototo_id
+                WHERE ei.equipment_machine_id = ANY(%s)
+                ORDER BY ei.equipment_machine_id, ei.id DESC
+                """,
+                params=(mapped_ids,)
+            )
+            status_by_equipment = {
+                str(row["equipment_machine_id"]): str(row["status"])
+                for _, row in global_states.iterrows()
+            }
+
             matrix_rows = []
             for equipment_id in mapped_ids:
                 equipment = catalog_by_id.get(equipment_id, {})
+                equipment_name = equipment.get("machine_name", "Nama equipment belum tersedia")
                 raw_status = status_by_equipment.get(equipment_id, "BELUM DIMULAI")
+                status_label = {
+                    "ACTIVE": "🟢 ACTIVE / TERISOLASI",
+                    "COMPLETED": "⚪ ENDED",
+                    "BELUM DIMULAI": "— BELUM DIMULAI"
+                }.get(raw_status, raw_status)
                 matrix_rows.append({
                     "Equipment ID": equipment_id,
-                    "Equipment for LOTOTO": equipment.get("machine_name", "Nama equipment belum tersedia"),
-                    "Titik Tag & Padlock": equipment.get("points") if equipment else None,
-                    "Status": status_badges.get(raw_status, raw_status)
+                    "Equipment for LOTOTO": equipment_name,
+                    "Jumlah titik Tag & Padlock": equipment.get("points") if equipment else None,
+                    "Status": status_label
                 })
+
             matrix_df = pd.DataFrame(matrix_rows)
-            def style_matrix_row(row):
-                status = row["Status"]
-                if "ACTIVE" in status:
-                    return ["background-color: rgba(22,163,74,.12); color: inherit; font-weight:600"] * len(row)
-                if "ENDED" in status:
-                    return ["background-color: rgba(148,163,184,.16); color: inherit"] * len(row)
+            def shade_ended_equipment(row):
+                if row["Status"] == "⚪ ENDED":
+                    return ["background-color: #d1d5db; color: #6b7280"] * len(row)
                 return [""] * len(row)
+
             st.dataframe(
-                matrix_df.style.apply(style_matrix_row, axis=1),
-                use_container_width=True, hide_index=True
+                matrix_df.style.apply(shade_ended_equipment, axis=1),
+                use_container_width=True,
+                hide_index=True
             )
 
+            states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
             if states and all(state == "ACTIVE" for state in states):
-                st.success(f"EQUIPMENT FOR WORKING ACTIVE — {working_id}. Seluruh Equipment for LOTOTO pada grup ini sudah ACTIVE/terisolasi.")
+                st.success(
+                    f"🟢 EQUIPMENT FOR WORKING ACTIVE — {working_id} — {working_name}. "
+                    "Seluruh Equipment for LOTOTO pada baris ini sudah ACTIVE/terisolasi."
+                )
             elif states and all(state == "COMPLETED" for state in states):
                 st.info("Seluruh Equipment for LOTOTO pada Working ini sudah ENDED.")
             elif any(state == "COMPLETED" for state in states) and any(state == "ACTIVE" for state in states):
-                st.warning("Sebagian equipment sudah ENDED, sementara equipment lainnya masih ACTIVE.")
+                st.warning("Sebagian Equipment for LOTOTO sudah ENDED (abu-abu), sementara equipment lainnya masih ACTIVE.")
             elif any(state == "ACTIVE" for state in states):
                 st.info("Sebagian Equipment for LOTOTO sudah ACTIVE; equipment lainnya belum dimulai.")
             else:
                 st.caption("Belum ada aktivitas LOTOTO untuk equipment dalam grup ini.")
 
-    st.markdown("---")
     st.caption(
         "Sumber mapping: workbook lototo matrix packing house.xlsx. "
         "Periksa kembali mapping dan titik isolasi terhadap matriks resmi serta kondisi lapangan sebelum pekerjaan dilakukan."
