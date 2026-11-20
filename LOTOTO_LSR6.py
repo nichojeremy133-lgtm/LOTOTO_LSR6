@@ -1525,108 +1525,182 @@ elif menu == "Data Mesin":
 
 elif menu == "LOTOTO Matrix":
 
-    st.title("🟨 LOTOTO Matrix")
-    st.caption(
-        "Setiap Equipment for Working ditampilkan sebagai satu grup, "
-        "dengan hanya Equipment for LOTOTO yang memiliki tanda V pada baris tersebut di workbook Excel."
-    )
+    # --------------------------------------------------------
+    # LOTOTO MATRIX - modern industrial dashboard presentation
+    # --------------------------------------------------------
+    st.markdown("""
+    <style>
+    .matrix-hero {
+        padding: 24px 28px; border-radius: 18px; margin: 2px 0 18px 0;
+        background: linear-gradient(115deg, #101d35 0%, #183b5b 62%, #d97706 145%);
+        color: #ffffff; border: 1px solid rgba(255,255,255,.08);
+    }
+    .matrix-hero h2 { color: #fff !important; margin: 0 0 6px 0; font-size: 1.65rem; }
+    .matrix-hero p { color: #dbeafe !important; margin: 0; font-size: .94rem; }
+    .matrix-kicker { color:#fbbf24; text-transform:uppercase; letter-spacing:2px;
+        font-size:.72rem; font-weight:800; margin-bottom:8px; }
+    div[data-testid="stMetric"] { background: var(--secondary-background-color);
+        border: 1px solid rgba(128,128,128,.18); padding: 13px 16px;
+        border-radius: 14px; }
+    .matrix-section-label { font-size:.76rem; font-weight:800; letter-spacing:1.2px;
+        color:#d97706; text-transform:uppercase; margin: 8px 0 4px 0; }
+    .matrix-note { color: var(--text-color); opacity:.72; font-size:.84rem; }
+    div[data-testid="stExpander"] { border:1px solid rgba(128,128,128,.22);
+        border-radius:14px; overflow:hidden; margin-bottom:9px; }
+    div[data-testid="stExpander"] details summary { font-weight:650; }
+    </style>
+    <div class="matrix-hero">
+      <div class="matrix-kicker">LSR 6 · Energy Isolation Control</div>
+      <h2>LOTOTO Equipment Matrix</h2>
+      <p>Monitoring hubungan Equipment for Working dengan titik isolasi Equipment for LOTOTO.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     catalog_by_id = {str(item["machine_id"]): item for item in WORKING_EQUIPMENT_CATALOG}
     total_relations = sum(len(WORKING_TO_LOTOTO.get(str(item["machine_id"]), [])) for item in WORKING_EQUIPMENT_CATALOG)
-    st.metric("Total relasi Working → LOTOTO", total_relations)
-    st.caption("ID dan nama Equipment for LOTOTO ditampilkan pada setiap grup. Status mengikuti catatan LOTOTO per equipment.")
 
+    # Prepare the latest equipment status once per mapped LOTOTO equipment.
+    all_mapped_ids = sorted({
+        str(eid)
+        for item in WORKING_EQUIPMENT_CATALOG
+        for eid in get_mapped_equipment(str(item["machine_id"]))
+    })
+    global_states = read_sql_df(
+        """
+        SELECT DISTINCT ON (ei.equipment_machine_id)
+            ei.equipment_machine_id, ei.status
+        FROM public.lototo_equipment_items ei
+        JOIN public.lototo l ON l.id = ei.lototo_id
+        WHERE ei.equipment_machine_id = ANY(%s)
+        ORDER BY ei.equipment_machine_id, ei.id DESC
+        """,
+        params=(all_mapped_ids,)
+    ) if all_mapped_ids else pd.DataFrame(columns=["equipment_machine_id", "status"])
+    status_by_equipment = {
+        str(row["equipment_machine_id"]): str(row["status"])
+        for _, row in global_states.iterrows()
+    }
+
+    group_data = []
     for item in WORKING_EQUIPMENT_CATALOG:
         working_id = str(item["machine_id"])
-        working_name = item["machine_name"]
         mapped_ids = [str(eid) for eid in get_mapped_equipment(working_id)]
+        states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
+        if states and all(state == "ACTIVE" for state in states):
+            group_status = "ACTIVE"
+        elif states and all(state == "COMPLETED" for state in states):
+            group_status = "ENDED"
+        elif any(state == "ACTIVE" for state in states):
+            group_status = "PARTIAL"
+        else:
+            group_status = "NOT STARTED"
+        group_data.append({"item": item, "working_id": working_id,
+                           "mapped_ids": mapped_ids, "states": states,
+                           "group_status": group_status})
+
+    active_count = sum(1 for state in status_by_equipment.values() if state == "ACTIVE")
+    ended_count = sum(1 for state in status_by_equipment.values() if state == "COMPLETED")
+    not_started_count = max(len(all_mapped_ids) - active_count - ended_count, 0)
+
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Working Equipment", f"{len(WORKING_EQUIPMENT_CATALOG):,}", "Equipment terdaftar")
+    metric_cols[1].metric("LOTOTO Equipment", f"{len(all_mapped_ids):,}", f"{total_relations:,} relasi mapping")
+    metric_cols[2].metric("ACTIVE", f"{active_count:,}", "Sedang terisolasi")
+    metric_cols[3].metric("ENDED", f"{ended_count:,}", f"{not_started_count:,} belum dimulai")
+
+    st.markdown('<div class="matrix-section-label">Explore equipment matrix</div>', unsafe_allow_html=True)
+    filter_cols = st.columns([2.2, 1.1, 1.1])
+    search_term = filter_cols[0].text_input(
+        "Cari equipment", placeholder="Cari ID atau nama equipment...", key="matrix_search"
+    ).strip().lower()
+    area_options = sorted({str(g["item"].get("area", "-")) for g in group_data})
+    selected_area = filter_cols[1].selectbox("Area", ["Semua Area"] + area_options, key="matrix_area_filter")
+    status_options = ["Semua Status", "ACTIVE", "PARTIAL", "ENDED", "NOT STARTED"]
+    selected_status = filter_cols[2].selectbox("Status", status_options, key="matrix_status_filter")
+
+    visible_groups = []
+    for group in group_data:
+        item = group["item"]
+        searchable = f"{group['working_id']} {item.get('machine_name', '')}".lower()
+        if search_term and search_term not in searchable and not any(
+            search_term in f"{eid} {catalog_by_id.get(eid, {}).get('machine_name', '')}".lower()
+            for eid in group["mapped_ids"]
+        ):
+            continue
+        if selected_area != "Semua Area" and str(item.get("area", "-")) != selected_area:
+            continue
+        if selected_status != "Semua Status" and group["group_status"] != selected_status:
+            continue
+        visible_groups.append(group)
+
+    st.caption(f"Menampilkan {len(visible_groups)} dari {len(group_data)} Working Equipment")
+    if not visible_groups:
+        st.info("Tidak ada equipment yang cocok dengan pencarian atau filter tersebut.")
+
+    status_badges = {
+        "ACTIVE": "🟢 ACTIVE / TERISOLASI",
+        "COMPLETED": "⚪ ENDED",
+        "BELUM DIMULAI": "— BELUM DIMULAI"
+    }
+    for group in visible_groups:
+        item = group["item"]
+        working_id = group["working_id"]
+        working_name = item["machine_name"]
+        mapped_ids = group["mapped_ids"]
+        states = group["states"]
+        group_status = group["group_status"]
+        status_icon = {"ACTIVE":"🟢", "PARTIAL":"🟠", "ENDED":"⚪", "NOT STARTED":"⚪"}[group_status]
+        status_text = {"ACTIVE":"ALL ACTIVE", "PARTIAL":"PARTIALLY ACTIVE", "ENDED":"ALL ENDED", "NOT STARTED":"NOT STARTED"}[group_status]
 
         with st.expander(
-            f"🏭 {working_id} — {working_name} | {len(mapped_ids)} Equipment for LOTOTO",
+            f"{status_icon}  {working_id}  ·  {working_name}     |     {len(mapped_ids)} LOTOTO points  ·  {status_text}",
             expanded=False
         ):
-            st.markdown(f"**Equipment for Working:** `{working_id}` — {working_name}")
-            st.caption(
-                f"Area: {item.get('area', '-')} · Jumlah titik Tag & Padlock: "
-                f"{item.get('points') if item.get('points') is not None else 'Tidak tercantum di Excel'}"
-            )
+            info_cols = st.columns([1.6, 1, 1])
+            info_cols[0].markdown(f"**Equipment for Working**\n\n`{working_id}` · {working_name}")
+            info_cols[1].markdown(f"**Area**\n\n{item.get('area', '-')}")
+            points = item.get("points")
+            info_cols[2].markdown(f"**Tag & Padlock points**\n\n{points if points is not None else 'Tidak tercantum'}")
 
             if not mapped_ids:
                 st.warning("Belum ada Equipment for LOTOTO yang dipetakan pada baris ini di Excel.")
                 continue
 
-            # Pastikan item status tersedia untuk record LOTOTO terakhir dari Working ini.
-            latest_parent = read_sql_df(
-                "SELECT id, work_status, start_time FROM public.lototo WHERE machine_id = %s ORDER BY id DESC LIMIT 1",
-                params=(working_id,)
-            )
-            if not latest_parent.empty:
-                ensure_lototo_equipment_items(
-                    int(latest_parent.iloc[0]["id"]), working_id,
-                    latest_parent.iloc[0]["start_time"]
-                )
-
-            # Tampilkan status terbaru untuk setiap Equipment for LOTOTO lintas kelompok Working.
-            global_states = read_sql_df(
-                """
-                SELECT DISTINCT ON (ei.equipment_machine_id)
-                    ei.equipment_machine_id, ei.status
-                FROM public.lototo_equipment_items ei
-                JOIN public.lototo l ON l.id = ei.lototo_id
-                WHERE ei.equipment_machine_id = ANY(%s)
-                ORDER BY ei.equipment_machine_id, ei.id DESC
-                """,
-                params=(mapped_ids,)
-            )
-            status_by_equipment = {
-                str(row["equipment_machine_id"]): str(row["status"])
-                for _, row in global_states.iterrows()
-            }
-
             matrix_rows = []
             for equipment_id in mapped_ids:
                 equipment = catalog_by_id.get(equipment_id, {})
-                equipment_name = equipment.get("machine_name", "Nama equipment belum tersedia")
                 raw_status = status_by_equipment.get(equipment_id, "BELUM DIMULAI")
-                status_label = {
-                    "ACTIVE": "🟢 ACTIVE / TERISOLASI",
-                    "COMPLETED": "⚪ ENDED",
-                    "BELUM DIMULAI": "— BELUM DIMULAI"
-                }.get(raw_status, raw_status)
                 matrix_rows.append({
                     "Equipment ID": equipment_id,
-                    "Equipment for LOTOTO": equipment_name,
-                    "Jumlah titik Tag & Padlock": equipment.get("points") if equipment else None,
-                    "Status": status_label
+                    "Equipment for LOTOTO": equipment.get("machine_name", "Nama equipment belum tersedia"),
+                    "Titik Tag & Padlock": equipment.get("points") if equipment else None,
+                    "Status": status_badges.get(raw_status, raw_status)
                 })
-
             matrix_df = pd.DataFrame(matrix_rows)
-            def shade_ended_equipment(row):
-                if row["Status"] == "⚪ ENDED":
-                    return ["background-color: #d1d5db; color: #6b7280"] * len(row)
+            def style_matrix_row(row):
+                status = row["Status"]
+                if "ACTIVE" in status:
+                    return ["background-color: rgba(22,163,74,.12); color: inherit; font-weight:600"] * len(row)
+                if "ENDED" in status:
+                    return ["background-color: rgba(148,163,184,.16); color: inherit"] * len(row)
                 return [""] * len(row)
-
             st.dataframe(
-                matrix_df.style.apply(shade_ended_equipment, axis=1),
-                use_container_width=True,
-                hide_index=True
+                matrix_df.style.apply(style_matrix_row, axis=1),
+                use_container_width=True, hide_index=True
             )
 
-            states = [status_by_equipment.get(eid, "BELUM DIMULAI") for eid in mapped_ids]
             if states and all(state == "ACTIVE" for state in states):
-                st.success(
-                    f"🟢 EQUIPMENT FOR WORKING ACTIVE — {working_id} — {working_name}. "
-                    "Seluruh Equipment for LOTOTO pada baris ini sudah ACTIVE/terisolasi."
-                )
+                st.success(f"EQUIPMENT FOR WORKING ACTIVE — {working_id}. Seluruh Equipment for LOTOTO pada grup ini sudah ACTIVE/terisolasi.")
             elif states and all(state == "COMPLETED" for state in states):
                 st.info("Seluruh Equipment for LOTOTO pada Working ini sudah ENDED.")
             elif any(state == "COMPLETED" for state in states) and any(state == "ACTIVE" for state in states):
-                st.warning("Sebagian Equipment for LOTOTO sudah ENDED (abu-abu), sementara equipment lainnya masih ACTIVE.")
+                st.warning("Sebagian equipment sudah ENDED, sementara equipment lainnya masih ACTIVE.")
             elif any(state == "ACTIVE" for state in states):
                 st.info("Sebagian Equipment for LOTOTO sudah ACTIVE; equipment lainnya belum dimulai.")
             else:
                 st.caption("Belum ada aktivitas LOTOTO untuk equipment dalam grup ini.")
 
+    st.markdown("---")
     st.caption(
         "Sumber mapping: workbook lototo matrix packing house.xlsx. "
         "Periksa kembali mapping dan titik isolasi terhadap matriks resmi serta kondisi lapangan sebelum pekerjaan dilakukan."
