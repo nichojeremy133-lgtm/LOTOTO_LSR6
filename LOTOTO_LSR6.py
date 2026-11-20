@@ -1662,7 +1662,7 @@ if menu == "Dashboard":
         )
         st.caption("Buka detail pada tab aplikasi yang sama:")
         render_open_detail_buttons(
-            active if "active" in locals() else history,
+            active,
             key_prefix="open_detail"
         )
     else:
@@ -2413,7 +2413,7 @@ elif menu == "Active LOTOTO":
         )
         st.caption("Buka detail pada tab aplikasi yang sama:")
         render_open_detail_buttons(
-            active if "active" in locals() else history,
+            active,
             key_prefix="open_detail"
         )
 
@@ -2469,7 +2469,7 @@ elif menu == "End LOTOTO":
         )
         st.caption("Buka detail pada tab aplikasi yang sama:")
         render_open_detail_buttons(
-            active if "active" in locals() else history,
+            active,
             key_prefix="open_detail"
         )
 
@@ -2593,3 +2593,34 @@ st.sidebar.caption(
 st.sidebar.caption(
     "Safety Management System - Prototype"
 )
+
+
+
+st.markdown("""
+<style>
+/* Improve contrast for typed text in Sign In / Sign Up and all form fields */
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stNumberInput"] input,
+[data-testid="stDateInput"] input,
+[data-testid="stTimeInput"] input,
+[data-testid="stSelectbox"] input,
+[data-testid="stMultiSelect"] input {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    caret-color: #168b83 !important;
+    opacity: 1 !important;
+}
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder {
+    color: #8497a3 !important;
+    -webkit-text-fill-color: #8497a3 !important;
+    opacity: 1 !important;
+}
+[data-testid="stTextInput"] input[type="password"],
+[data-testid="stTextInput"] input[type="text"] {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+}
+</style>
+""", unsafe_allow_html=True)
