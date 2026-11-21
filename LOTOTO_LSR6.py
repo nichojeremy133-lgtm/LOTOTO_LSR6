@@ -1063,7 +1063,6 @@ if st.session_state.authenticated_user is None:
         </div>
         """, unsafe_allow_html=True)
     with auth_col:
-        st.markdown('<div class="lototo-section-kicker">MEMBER ACCESS</div>', unsafe_allow_html=True)
         st.markdown("## Welcome")
         st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
         login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
@@ -2748,3 +2747,74 @@ div[data-baseweb="input"] button {
 
 </style>
 """, unsafe_allow_html=True)
+
+
+
+# ============================================================
+# SIGN IN / SIGN UP - HIGH CONTRAST TEXT
+# ============================================================
+st.markdown("""
+<style>
+/* Sign-in/sign-up labels and supporting text */
+[data-testid="stAppViewContainer"] label,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] p {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    font-weight: 650 !important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] p {
+    color: #526b7b !important;
+    -webkit-text-fill-color: #526b7b !important;
+}
+
+/* Tabs: Sign In / Create Account */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: #e8f0f3 !important;
+    border-bottom: 1px solid #cbd9df !important;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    color: #29485b !important;
+    -webkit-text-fill-color: #29485b !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+[data-testid="stTabs"] button[role="tab"] p,
+[data-testid="stTabs"] button[role="tab"] div {
+    color: #29485b !important;
+    -webkit-text-fill-color: #29485b !important;
+}
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    color: #087c75 !important;
+    -webkit-text-fill-color: #087c75 !important;
+    border-bottom-color: #087c75 !important;
+}
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div {
+    color: #087c75 !important;
+    -webkit-text-fill-color: #087c75 !important;
+}
+
+/* Submit buttons: preserve strong readable contrast, including disabled state */
+[data-testid="stFormSubmitButton"] button,
+[data-testid="stFormSubmitButton"] button p,
+[data-testid="stFormSubmitButton"] button span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 750 !important;
+    opacity: 1 !important;
+}
+[data-testid="stFormSubmitButton"] button:disabled {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    filter: saturate(.9);
+}
+
+/* Make Welcome title and intro copy crisp */
+[data-testid="stAppViewContainer"] h2 {
+    color: #15384d !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
