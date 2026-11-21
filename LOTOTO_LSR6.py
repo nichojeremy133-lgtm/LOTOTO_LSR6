@@ -35,6 +35,138 @@ st.set_page_config(
 )
 
 
+# ============================================================
+# HIGH-CONTRAST LOGIN CSS - INJECTED BEFORE AUTH FLOW / st.stop()
+# ============================================================
+st.markdown("""
+<style>
+/* Labels above the input boxes */
+.stApp [data-testid="stWidgetLabel"],
+.stApp [data-testid="stWidgetLabel"] *,
+.stApp label,
+.stApp label * {
+  color: #102A3A !important;
+  -webkit-text-fill-color: #102A3A !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+}
+
+/* Typed text: pure black, including focus and password fields */
+.stApp input,
+.stApp textarea,
+.stApp [data-baseweb="input"] input,
+.stApp [data-baseweb="base-input"] input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  caret-color: #000000 !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Input field box: white fill with a clear charcoal border */
+.stApp [data-testid="stTextInput"] [data-baseweb="input"],
+.stApp [data-testid="stTextInput"] [data-baseweb="base-input"],
+.stApp div[data-baseweb="input"],
+.stApp div[data-baseweb="base-input"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 2px solid #263A46 !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+}
+
+/* Native input is transparent so there is no second white bar */
+.stApp [data-testid="stTextInput"] input,
+.stApp div[data-baseweb="input"] input,
+.stApp div[data-baseweb="base-input"] input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Focus outline */
+.stApp [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
+.stApp [data-testid="stTextInput"] [data-baseweb="base-input"]:focus-within,
+.stApp div[data-baseweb="input"]:focus-within,
+.stApp div[data-baseweb="base-input"]:focus-within {
+  border: 2px solid #007D73 !important;
+  box-shadow: 0 0 0 3px rgba(0,125,115,.20) !important;
+}
+
+/* Placeholder */
+.stApp input::placeholder,
+.stApp textarea::placeholder {
+  color: #687985 !important;
+  -webkit-text-fill-color: #687985 !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* Tabs: strong contrast for both inactive and active states */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+  background: #E5EDF1 !important;
+  border-bottom: 1px solid #B8C8D0 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p {
+  color: #17384B !important;
+  -webkit-text-fill-color: #17384B !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+  color: #00665F !important;
+  -webkit-text-fill-color: #00665F !important;
+  font-weight: 900 !important;
+}
+
+/* Captions and helper text */
+.stApp [data-testid="stCaptionContainer"],
+.stApp [data-testid="stCaptionContainer"] * {
+  color: #405563 !important;
+  -webkit-text-fill-color: #405563 !important;
+}
+
+/* Form submit buttons: white text on dark saturated teal */
+.stApp [data-testid="stFormSubmitButton"] button,
+.stApp [data-testid="stFormSubmitButton"] button *,
+.stApp [data-testid="stFormSubmitButton"] button p,
+.stApp [data-testid="stFormSubmitButton"] button span {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 1 !important;
+  font-weight: 850 !important;
+}
+.stApp [data-testid="stFormSubmitButton"] button:disabled {
+  background: #087F78 !important;
+  opacity: 1 !important;
+}
+
+/* Password visibility icon */
+.stApp [data-testid="stTextInput"] button,
+.stApp [data-testid="stTextInput"] button svg {
+  color: #FFFFFF !important;
+}
+
+/* Chrome autofill */
+.stApp input:-webkit-autofill,
+.stApp input:-webkit-autofill:hover,
+.stApp input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #000000 !important;
+  caret-color: #000000 !important;
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
 
 # ============================================================
 # UI THEME - LIGHT INDUSTRIAL / SAFETY DASHBOARD
@@ -2750,71 +2882,5 @@ div[data-baseweb="input"] button {
 
 
 
-# ============================================================
-# SIGN IN / SIGN UP - HIGH CONTRAST TEXT
-# ============================================================
-st.markdown("""
-<style>
-/* Sign-in/sign-up labels and supporting text */
-[data-testid="stAppViewContainer"] label,
-[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] p {
-    color: #183247 !important;
-    -webkit-text-fill-color: #183247 !important;
-    font-weight: 650 !important;
-}
-[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
-[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] p {
-    color: #526b7b !important;
-    -webkit-text-fill-color: #526b7b !important;
-}
 
-/* Tabs: Sign In / Create Account */
-[data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: #e8f0f3 !important;
-    border-bottom: 1px solid #cbd9df !important;
-}
-[data-testid="stTabs"] button[role="tab"] {
-    color: #29485b !important;
-    -webkit-text-fill-color: #29485b !important;
-    font-weight: 700 !important;
-    opacity: 1 !important;
-}
-[data-testid="stTabs"] button[role="tab"] p,
-[data-testid="stTabs"] button[role="tab"] div {
-    color: #29485b !important;
-    -webkit-text-fill-color: #29485b !important;
-}
-[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    color: #087c75 !important;
-    -webkit-text-fill-color: #087c75 !important;
-    border-bottom-color: #087c75 !important;
-}
-[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
-[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div {
-    color: #087c75 !important;
-    -webkit-text-fill-color: #087c75 !important;
-}
-
-/* Submit buttons: preserve strong readable contrast, including disabled state */
-[data-testid="stFormSubmitButton"] button,
-[data-testid="stFormSubmitButton"] button p,
-[data-testid="stFormSubmitButton"] button span {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    font-weight: 750 !important;
-    opacity: 1 !important;
-}
-[data-testid="stFormSubmitButton"] button:disabled {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    opacity: 1 !important;
-    filter: saturate(.9);
-}
-
-/* Make Welcome title and intro copy crisp */
-[data-testid="stAppViewContainer"] h2 {
-    color: #15384d !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
