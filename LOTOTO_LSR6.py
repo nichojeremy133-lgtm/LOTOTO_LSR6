@@ -36,134 +36,132 @@ st.set_page_config(
 
 
 # ============================================================
-# HIGH-CONTRAST LOGIN CSS - INJECTED BEFORE AUTH FLOW / st.stop()
+# SIGN IN / SIGN UP - LIGHT INPUT BOX + BLACK TYPED TEXT
 # ============================================================
 st.markdown("""
 <style>
-/* Labels above the input boxes */
+/* Labels and headings remain dark on the light page */
 .stApp [data-testid="stWidgetLabel"],
 .stApp [data-testid="stWidgetLabel"] *,
 .stApp label,
 .stApp label * {
-  color: #102A3A !important;
-  -webkit-text-fill-color: #102A3A !important;
-  opacity: 1 !important;
-  font-weight: 800 !important;
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+    opacity: 1 !important;
+    font-weight: 650 !important;
 }
 
-/* Typed text: pure black, including focus and password fields */
-.stApp input,
-.stApp textarea,
-.stApp [data-baseweb="input"] input,
-.stApp [data-baseweb="base-input"] input {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  caret-color: #000000 !important;
-  opacity: 1 !important;
-  font-weight: 700 !important;
-  text-shadow: none !important;
-}
-
-/* Input field box: white fill with a clear charcoal border */
-.stApp [data-testid="stTextInput"] [data-baseweb="input"],
-.stApp [data-testid="stTextInput"] [data-baseweb="base-input"],
+/* The entire visible input shell is WHITE */
+.stApp [data-testid="stTextInput"] div[data-baseweb="input"],
+.stApp [data-testid="stTextInput"] div[data-baseweb="base-input"],
 .stApp div[data-baseweb="input"],
 .stApp div[data-baseweb="base-input"] {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
-  border: 2px solid #263A46 !important;
-  border-radius: 11px !important;
-  box-shadow: none !important;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    border: 1px solid #C8D7DE !important;
+    border-radius: 11px !important;
+    box-shadow: none !important;
 }
 
-/* Native input is transparent so there is no second white bar */
+/* Typed characters are BLACK; input itself stays white */
 .stApp [data-testid="stTextInput"] input,
+.stApp [data-testid="stTextArea"] textarea,
 .stApp div[data-baseweb="input"] input,
-.stApp div[data-baseweb="base-input"] input {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+.stApp div[data-baseweb="base-input"] input,
+.stApp input[type="text"],
+.stApp input[type="password"],
+.stApp input[type="email"],
+.stApp textarea {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    caret-color: #000000 !important;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+    border-radius: 9px !important;
+    box-shadow: none !important;
 }
 
-/* Focus outline */
-.stApp [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
-.stApp [data-testid="stTextInput"] [data-baseweb="base-input"]:focus-within,
+/* Keep the white surface when focused */
+.stApp [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+.stApp [data-testid="stTextInput"] div[data-baseweb="base-input"]:focus-within,
 .stApp div[data-baseweb="input"]:focus-within,
 .stApp div[data-baseweb="base-input"]:focus-within {
-  border: 2px solid #007D73 !important;
-  box-shadow: 0 0 0 3px rgba(0,125,115,.20) !important;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    border: 2px solid #168B83 !important;
+    box-shadow: 0 0 0 2px rgba(22,139,131,.12) !important;
 }
 
-/* Placeholder */
+/* Placeholder is medium gray, while typed text remains black */
 .stApp input::placeholder,
 .stApp textarea::placeholder {
-  color: #687985 !important;
-  -webkit-text-fill-color: #687985 !important;
-  opacity: 1 !important;
-  font-weight: 500 !important;
+    color: #7B8D97 !important;
+    -webkit-text-fill-color: #7B8D97 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
 }
 
-/* Tabs: strong contrast for both inactive and active states */
+/* Tabs: light background, readable dark text */
 .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-  background: #E5EDF1 !important;
-  border-bottom: 1px solid #B8C8D0 !important;
+    background: #EDF3F6 !important;
+    border-bottom: 1px solid #D7E2E7 !important;
 }
 .stApp [data-testid="stTabs"] button[role="tab"],
 .stApp [data-testid="stTabs"] button[role="tab"] *,
 .stApp [data-testid="stTabs"] button[role="tab"] p {
-  color: #17384B !important;
-  -webkit-text-fill-color: #17384B !important;
-  opacity: 1 !important;
-  font-weight: 800 !important;
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
 }
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
-  color: #00665F !important;
-  -webkit-text-fill-color: #00665F !important;
-  font-weight: 900 !important;
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
 }
 
-/* Captions and helper text */
+/* Helper/caption text */
 .stApp [data-testid="stCaptionContainer"],
 .stApp [data-testid="stCaptionContainer"] * {
-  color: #405563 !important;
-  -webkit-text-fill-color: #405563 !important;
+    color: #526B7B !important;
+    -webkit-text-fill-color: #526B7B !important;
 }
 
-/* Form submit buttons: white text on dark saturated teal */
+/* Buttons keep white lettering on teal background */
 .stApp [data-testid="stFormSubmitButton"] button,
 .stApp [data-testid="stFormSubmitButton"] button *,
 .stApp [data-testid="stFormSubmitButton"] button p,
 .stApp [data-testid="stFormSubmitButton"] button span {
-  color: #FFFFFF !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  opacity: 1 !important;
-  font-weight: 850 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+    font-weight: 750 !important;
 }
 .stApp [data-testid="stFormSubmitButton"] button:disabled {
-  background: #087F78 !important;
-  opacity: 1 !important;
+    background: #168B83 !important;
+    opacity: 1 !important;
 }
 
-/* Password visibility icon */
-.stApp [data-testid="stTextInput"] button,
-.stApp [data-testid="stTextInput"] button svg {
-  color: #FFFFFF !important;
-}
-
-/* Chrome autofill */
+/* Chrome autofill: white field with black autofilled text */
 .stApp input:-webkit-autofill,
 .stApp input:-webkit-autofill:hover,
 .stApp input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #000000 !important;
-  caret-color: #000000 !important;
-  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
-  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+    -webkit-text-fill-color: #000000 !important;
+    caret-color: #000000 !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+    box-shadow: 0 0 0 1000px #FFFFFF inset !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+
+
 
 
 
