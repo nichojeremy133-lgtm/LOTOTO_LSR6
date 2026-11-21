@@ -1225,6 +1225,22 @@ def ensure_lototo_equipment_items(lototo_id, working_machine_id, started_at):
 # HEADER
 # ============================================================
 
+# Safety guard: Streamlit can recreate session state when a browser session
+# changes. Never access authenticated_user as a dictionary unless it exists.
+current_user = st.session_state.get("authenticated_user")
+if not isinstance(current_user, dict) or not current_user.get("full_name"):
+    # Fail closed: an invalid session must not access protected pages.
+    st.session_state["authenticated_user"] = None
+    st.info("Sesi login tidak ditemukan atau sudah berakhir. Silakan sign in kembali.")
+    st.stop()
+
+# Defensive display value; sidebar never indexes or calls .get() on None.
+sidebar_user_name = (
+    current_user.get("full_name", "User")
+    if isinstance(current_user, dict)
+    else "User"
+)
+
 st.sidebar.markdown("""
 <div class="lototo-brand">
   <div class="brand-kicker">Safety Management</div>
@@ -1233,7 +1249,7 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 st.sidebar.markdown("**SIGNED IN AS**")
-st.sidebar.markdown(f"👤 {st.session_state.authenticated_user['full_name']}")
+st.sidebar.markdown(f"👤 {sidebar_user_name}")
 if st.sidebar.button("Sign Out", use_container_width=True):
     st.session_state.authenticated_user = None
     st.query_params.clear()
@@ -2598,29 +2614,137 @@ st.sidebar.caption(
 
 st.markdown("""
 <style>
-/* Improve contrast for typed text in Sign In / Sign Up and all form fields */
+/* Sign In / Sign Up: remove the bright white inner strip and keep typed text clear.
+   Style both the BaseWeb shell and the native input so browser defaults cannot
+   paint a second white layer over the field. */
+[data-testid="stTextInput"] div[data-baseweb="input"],
+[data-testid="stTextInput"] div[data-baseweb="base-input"],
+div[data-baseweb="input"],
+div[data-baseweb="base-input"] {
+    background: #eaf2f5 !important;
+    border: 1px solid #c6d8df !important;
+    border-radius: 11px !important;
+    box-shadow: none !important;
+}
+
+/* Native editable area stays transparent inside the styled field shell */
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
-[data-testid="stNumberInput"] input,
-[data-testid="stDateInput"] input,
-[data-testid="stTimeInput"] input,
-[data-testid="stSelectbox"] input,
-[data-testid="stMultiSelect"] input {
+[data-testid="stAppViewContainer"] input,
+[data-testid="stAppViewContainer"] textarea,
+div[data-baseweb="input"] input,
+div[data-baseweb="base-input"] input {
+    background: transparent !important;
+    background-color: transparent !important;
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
     caret-color: #168b83 !important;
     opacity: 1 !important;
+    text-shadow: none !important;
+    font-weight: 600 !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
+
+/* Focus state: teal outline around the complete field, not an inner white bar */
+[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+[data-testid="stTextInput"] div[data-baseweb="base-input"]:focus-within,
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="base-input"]:focus-within {
+    background: #f0f8f8 !important;
+    border-color: #168b83 !important;
+    box-shadow: 0 0 0 2px rgba(22,139,131,.13) !important;
+}
+
 [data-testid="stTextInput"] input::placeholder,
-[data-testid="stTextArea"] textarea::placeholder {
-    color: #8497a3 !important;
-    -webkit-text-fill-color: #8497a3 !important;
+[data-testid="stTextArea"] textarea::placeholder,
+[data-testid="stAppViewContainer"] input::placeholder,
+[data-testid="stAppViewContainer"] textarea::placeholder {
+    color: #718895 !important;
+    -webkit-text-fill-color: #718895 !important;
     opacity: 1 !important;
+    font-weight: 400 !important;
 }
-[data-testid="stTextInput"] input[type="password"],
-[data-testid="stTextInput"] input[type="text"] {
-    color: #183247 !important;
+
+/* Keep password visibility control integrated with the same field surface */
+[data-testid="stTextInput"] button,
+div[data-baseweb="input"] button {
+    background: transparent !important;
+    color: #168b83 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Prevent Chrome autofill from introducing a white overlay */
+[data-testid="stAppViewContainer"] input:-webkit-autofill,
+[data-testid="stAppViewContainer"] input:-webkit-autofill:hover,
+[data-testid="stAppViewContainer"] input:-webkit-autofill:focus {
     -webkit-text-fill-color: #183247 !important;
+    caret-color: #168b83 !important;
+    -webkit-box-shadow: 0 0 0 1000px #eaf2f5 inset !important;
+    box-shadow: 0 0 0 1000px #eaf2f5 inset !important;
 }
+
+
+/* FINAL OVERRIDE: make entered text black and remove inner white fill */
+.stApp [data-testid="stTextInput"] input,
+.stApp [data-testid="stTextArea"] textarea,
+.stApp [data-testid="stNumberInput"] input,
+.stApp [data-testid="stDateInput"] input,
+.stApp div[data-baseweb="input"] input,
+.stApp div[data-baseweb="base-input"] input,
+.stApp input[type="text"],
+.stApp input[type="password"],
+.stApp input[type="email"],
+.stApp textarea {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    caret-color: #000000 !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    text-shadow: none !important;
+    font-weight: 600 !important;
+}
+
+/* BaseWeb wrapper is the visible field; keep it light and remove inner overlays */
+.stApp [data-testid="stTextInput"] [data-baseweb="input"],
+.stApp [data-testid="stTextInput"] [data-baseweb="base-input"],
+.stApp div[data-baseweb="input"],
+.stApp div[data-baseweb="base-input"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #b8cbd3 !important;
+    box-shadow: none !important;
+}
+
+/* Focus border only; never add a white inset layer */
+.stApp [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
+.stApp [data-testid="stTextInput"] [data-baseweb="base-input"]:focus-within,
+.stApp div[data-baseweb="input"]:focus-within,
+.stApp div[data-baseweb="base-input"]:focus-within {
+    border-color: #168b83 !important;
+    box-shadow: 0 0 0 2px rgba(22,139,131,.16) !important;
+}
+
+/* Placeholder remains gray; entered characters remain black */
+.stApp input::placeholder,
+.stApp textarea::placeholder {
+    color: #758894 !important;
+    -webkit-text-fill-color: #758894 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+
+/* Chrome autofill: prevent browser's pale text/fill treatment */
+.stApp input:-webkit-autofill,
+.stApp input:-webkit-autofill:hover,
+.stApp input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000000 !important;
+    caret-color: #000000 !important;
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
