@@ -300,6 +300,55 @@ div[data-testid="stAlert"] { border-radius: 12px; }
     .lototo-login-hero { min-height: 190px; margin-bottom: 1rem; }
     .lototo-login-hero h2 { font-size: 1.55rem; }
 }
+
+/* ============================================================
+   ALERT / MESSAGE BOX CONTRAST
+   ============================================================ */
+/* Use light alert surfaces instead of dark fills, with readable text */
+.stApp [data-testid="stAlert"] {
+    border-radius: 12px !important;
+    border: 1px solid #cfe0e6 !important;
+    box-shadow: none !important;
+}
+.stApp [data-testid="stAlert"] p,
+.stApp [data-testid="stAlert"] span,
+.stApp [data-testid="stAlert"] div,
+.stApp [data-testid="stAlert"] [data-testid="stMarkdownContainer"] * {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+/* Success message: pale green box + deep green text */
+.stApp [data-testid="stAlert"]:has(svg[fill="currentColor"]) {
+    background: #eaf6ef !important;
+}
+/* Streamlit alert variants (data-baseweb / icon-based selectors) */
+.stApp [data-testid="stAlert"] [data-testid="stMarkdownContainer"] {
+    color: #183247 !important;
+}
+.stApp [data-testid="stAlert"] svg {
+    opacity: 1 !important;
+}
+
+/* Explicitly lighten the success alert used for the empty Active LOTOTO state */
+.stApp [data-testid="stAlert"]:has([data-testid="stNotificationContentSuccess"]),
+.stApp [data-testid="stAlert"]:has(svg[aria-label="success"]) {
+    background-color: #e8f5ec !important;
+    border-color: #b8dfc5 !important;
+}
+.stApp [data-testid="stAlert"]:has([data-testid="stNotificationContentSuccess"]) p,
+.stApp [data-testid="stAlert"]:has(svg[aria-label="success"]) p {
+    color: #14532d !important;
+    -webkit-text-fill-color: #14532d !important;
+}
+
+/* Generic fallback for alert containers whose variant marker differs by Streamlit version */
+.stApp [data-testid="stAlert"] {
+    background-color: #eef4f7 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
