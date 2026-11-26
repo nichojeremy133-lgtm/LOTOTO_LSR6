@@ -36,47 +36,75 @@ st.set_page_config(
 
 
 # ============================================================
-# LOGIN TABS - REMOVE DARK FOCUS / HOVER BOX
+# MODERN SIGN IN / CREATE ACCOUNT TABS
 # ============================================================
 st.markdown("""
 <style>
-/* Keep Sign In / Create Account tabs flat and light in every state.
-   This removes the dark rectangle caused by hover/focus/selected styling. */
-.stApp [data-testid="stTabs"] button[role="tab"],
-.stApp [data-testid="stTabs"] button[role="tab"]:hover,
-.stApp [data-testid="stTabs"] button[role="tab"]:focus,
-.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible,
-.stApp [data-testid="stTabs"] button[role="tab"]:active,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    outline: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
+/* Segmented-control tab container */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px !important;
+    width: fit-content !important;
+    min-width: min(100%, 370px) !important;
+    background: #EAF1F4 !important;
+    border: 1px solid #D6E2E8 !important;
+    border-radius: 14px !important;
+    box-shadow: inset 0 1px 2px rgba(20, 48, 64, .04) !important;
 }
-
-/* Prevent nested elements or pseudo-elements from drawing a dark box */
-.stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"]::before,
-.stApp [data-testid="stTabs"] button[role="tab"]::after {
+.stApp [data-testid="stTabs"] button[role="tab"] {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+    min-height: 42px !important;
+    padding: 0 20px !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
     background: transparent !important;
-    box-shadow: none !important;
-}
-
-/* Maintain readable text and show active tab with a teal underline only */
-.stApp [data-testid="stTabs"] button[role="tab"],
-.stApp [data-testid="stTabs"] button[role="tab"] * {
-    color: #29485B !important;
-    -webkit-text-fill-color: #29485B !important;
+    color: #36566A !important;
+    -webkit-text-fill-color: #36566A !important;
     opacity: 1 !important;
-    font-weight: 700 !important;
+    font-size: 14px !important;
+    font-weight: 650 !important;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease !important;
 }
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] * {
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-weight: inherit !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"]:hover {
+    background: #DCE8ED !important;
+    color: #17384B !important;
+    -webkit-text-fill-color: #17384B !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background: #FFFFFF !important;
     color: #087C75 !important;
     -webkit-text-fill-color: #087C75 !important;
-    border-bottom: 2px solid #087C75 !important;
+    border: 1px solid #D4E3E6 !important;
+    box-shadow: 0 2px 7px rgba(25, 55, 70, .12) !important;
+    font-weight: 800 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+}
+.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
+.stApp [data-testid="stTabs"] [data-baseweb="tab-border"] {
+    display: none !important;
+}
+@media (max-width: 520px) {
+    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .stApp [data-testid="stTabs"] button[role="tab"] {
+        padding: 0 12px !important;
+        font-size: 13px !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
