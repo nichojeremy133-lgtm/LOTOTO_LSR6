@@ -94,6 +94,47 @@ div[aria-selected="true"] {
     -webkit-text-fill-color: #29485B !important;
 }
 
+/* SIGN IN / CREATE ACCOUNT TABS: WHITE SURFACE IN ALL STATES */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    padding: 0 !important;
+    border-bottom: 1px solid #D9E3E8 !important;
+    box-shadow: none !important;
+    gap: 18px !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"]:hover,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    opacity: 1 !important;
+}
+
+/* Inactive tab text */
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] p {
+    color: #526B7B !important;
+    -webkit-text-fill-color: #526B7B !important;
+    font-weight: 650 !important;
+}
+
+/* Active tab: same white background, teal text and underline only */
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
+    border-bottom: 2px solid #087C75 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -190,6 +231,27 @@ st.markdown("""
     -webkit-text-fill-color: #7B8D97 !important;
     opacity: 1 !important;
     font-weight: 400 !important;
+}
+
+/* Tabs: light background, readable dark text */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: #EDF3F6 !important;
+    border-bottom: 1px solid #D7E2E7 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p {
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
 }
 
 /* Helper/caption text */
@@ -1263,49 +1325,6 @@ if st.session_state.authenticated_user is None:
         st.markdown("## Welcome")
         st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
         login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
-
-        st.markdown("""
-        <style>
-        /* Sign In / Create Account: plain white tabs in every interaction state */
-        div[data-testid="stTabs"] [data-baseweb="tab-list"],
-        div[data-testid="stTabs"] [data-baseweb="tab"],
-        div[data-testid="stTabs"] button[role="tab"],
-        div[data-testid="stTabs"] button[role="tab"]:hover,
-        div[data-testid="stTabs"] button[role="tab"]:active,
-        div[data-testid="stTabs"] button[role="tab"]:focus,
-        div[data-testid="stTabs"] button[role="tab"]:focus-visible,
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="false"] {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            background-image: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-        }
-
-        div[data-testid="stTabs"] button[role="tab"],
-        div[data-testid="stTabs"] button[role="tab"] *,
-        div[data-testid="stTabs"] button[role="tab"]:hover *,
-        div[data-testid="stTabs"] button[role="tab"]:focus * {
-            color: #29485B !important;
-            -webkit-text-fill-color: #29485B !important;
-            opacity: 1 !important;
-        }
-
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-        div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] * {
-            color: #087C75 !important;
-            -webkit-text-fill-color: #087C75 !important;
-            border-bottom-color: #087C75 !important;
-        }
-
-        /* Active marker is a teal underline only, never a dark tab box */
-        div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
-            background-color: #168B83 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
 
         with login_tab:
             with st.form("lototo_signin_form", clear_on_submit=False):
