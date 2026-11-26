@@ -135,6 +135,61 @@ div[aria-selected="true"] {
     border-bottom: 2px solid #087C75 !important;
 }
 
+
+/* FINAL LOGIN TAB OVERRIDE: WHITE TAB SURFACE; ONLY LABEL COLOR CHANGES */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] > div {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    box-shadow: none !important;
+}
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:hover,
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:focus,
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:active,
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    opacity: 1 !important;
+}
+/* BaseWeb sometimes paints the tab surface on a nested element */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"] > div,
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"] > div > div {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    box-shadow: none !important;
+}
+/* Unselected label */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"] * {
+    color: #526B7B !important;
+    -webkit-text-fill-color: #526B7B !important;
+}
+/* Selected label: teal, underline only; still white behind it */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] * {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
+}
+/* Selected indicator line */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] [data-baseweb="tab-highlight"] {
+    background-color: #087C75 !important;
+    height: 2px !important;
+}
+/* Remove dark hover/focus overlay from any tab */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]::before,
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]::after {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
