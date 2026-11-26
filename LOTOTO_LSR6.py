@@ -36,6 +36,69 @@ st.set_page_config(
 
 
 # ============================================================
+# SIDEBAR MENU - HIGH CONTRAST DARK SELECTBOX
+# ============================================================
+st.markdown("""
+<style>
+/* Selected value in the collapsed sidebar dropdown */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"],
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background-color: #2D2A27 !important;
+    color: #FFFFFF !important;
+    border-color: #514C46 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] *,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
+}
+
+/* Dropdown popup options */
+div[data-baseweb="popover"] ul,
+div[data-baseweb="popover"] li,
+div[data-baseweb="menu"],
+div[data-baseweb="menu"] *,
+div[role="listbox"],
+div[role="listbox"] *,
+div[role="option"],
+div[role="option"] * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+div[data-baseweb="popover"] ul,
+div[data-baseweb="menu"],
+div[role="listbox"] {
+    background-color: #2D2A27 !important;
+}
+div[data-baseweb="popover"] li,
+div[role="option"] {
+    background-color: #2D2A27 !important;
+}
+div[data-baseweb="popover"] li:hover,
+div[role="option"]:hover,
+div[aria-selected="true"] {
+    background-color: #49443E !important;
+}
+
+/* Sidebar dropdown label */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] label,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] label * {
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# ============================================================
 # ALERT / STATUS BOX TEXT CONTRAST
 # ============================================================
 st.markdown("""
