@@ -36,82 +36,6 @@ st.set_page_config(
 
 
 # ============================================================
-# MODERN SIGN IN / CREATE ACCOUNT TABS
-# ============================================================
-st.markdown("""
-<style>
-/* Segmented-control tab container */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    padding: 6px !important;
-    width: fit-content !important;
-    min-width: min(100%, 370px) !important;
-    background: #EAF1F4 !important;
-    border: 1px solid #D6E2E8 !important;
-    border-radius: 14px !important;
-    box-shadow: inset 0 1px 2px rgba(20, 48, 64, .04) !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"] {
-    flex: 1 1 auto !important;
-    justify-content: center !important;
-    min-height: 42px !important;
-    padding: 0 20px !important;
-    border: 1px solid transparent !important;
-    border-radius: 10px !important;
-    background: transparent !important;
-    color: #36566A !important;
-    -webkit-text-fill-color: #36566A !important;
-    opacity: 1 !important;
-    font-size: 14px !important;
-    font-weight: 650 !important;
-    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] p {
-    color: inherit !important;
-    -webkit-text-fill-color: currentColor !important;
-    font-weight: inherit !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"]:hover {
-    background: #DCE8ED !important;
-    color: #17384B !important;
-    -webkit-text-fill-color: #17384B !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    background: #FFFFFF !important;
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
-    border: 1px solid #D4E3E6 !important;
-    box-shadow: 0 2px 7px rgba(25, 55, 70, .12) !important;
-    font-weight: 800 !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
-}
-.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-border"] {
-    display: none !important;
-}
-@media (max-width: 520px) {
-    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-    .stApp [data-testid="stTabs"] button[role="tab"] {
-        padding: 0 12px !important;
-        font-size: 13px !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-
-# ============================================================
 # SIDEBAR MENU - HIGH CONTRAST DARK SELECTBOX
 # ============================================================
 st.markdown("""
@@ -267,25 +191,73 @@ st.markdown("""
     font-weight: 400 !important;
 }
 
-/* Tabs: light background, readable dark text */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: #EDF3F6 !important;
-    border-bottom: 1px solid #D7E2E7 !important;
+/* Modern segmented Sign In / Create Account switch (st.radio) */
+.stApp [data-testid="stRadio"] {
+    margin: 10px 0 16px 0 !important;
 }
-.stApp [data-testid="stTabs"] button[role="tab"],
-.stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] p {
-    color: #29485B !important;
-    -webkit-text-fill-color: #29485B !important;
-    opacity: 1 !important;
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    background: #EAF1F5 !important;
+    border: 1px solid #D6E2E8 !important;
+    border-radius: 14px !important;
+    width: auto !important;
+}
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 40px !important;
+    padding: 0 20px !important;
+    margin: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: #34566A !important;
+    -webkit-text-fill-color: #34566A !important;
     font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease !important;
 }
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label > div:first-child {
+    display: none !important;
+}
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label p,
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label span {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-weight: inherit !important;
+}
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) {
+    background: #FFFFFF !important;
+    border-color: #D2E1E7 !important;
     color: #087C75 !important;
     -webkit-text-fill-color: #087C75 !important;
+    box-shadow: 0 2px 7px rgba(25,55,70,.12) !important;
     font-weight: 800 !important;
+}
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) p,
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) span {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+}
+.stApp [data-testid="stRadio"] > div[role="radiogroup"] > label:hover:not(:has(input:checked)) {
+    background: #DCE8ED !important;
+    color: #17384B !important;
+    -webkit-text-fill-color: #17384B !important;
+}
+@media (max-width: 700px) {
+    .stApp [data-testid="stRadio"] > div[role="radiogroup"] {
+        display: flex !important;
+        width: 100% !important;
+    }
+    .stApp [data-testid="stRadio"] > div[role="radiogroup"] > label {
+        flex: 1 1 0 !important;
+        padding: 0 10px !important;
+    }
 }
 
 /* Helper/caption text */
@@ -1340,163 +1312,6 @@ def authenticate_app_user(username: str, password: str):
 
 
 
-
-# ============================================================
-# MODERN LOTOTO AUTHENTICATION PAGE
-# ============================================================
-st.markdown("""
-<style>
-.stApp {
-  background: radial-gradient(circle at 12% 18%,rgba(31,139,133,.09),transparent 27%),
-              radial-gradient(circle at 88% 82%,rgba(54,112,145,.08),transparent 28%),
-              linear-gradient(135deg,#F7FAFC 0%,#EEF4F7 100%) !important;
-}
-.stApp [data-testid="stAppViewContainer"] .main .block-container {
-  max-width:1180px !important; padding-top:clamp(2rem,7vh,5rem) !important;
-  padding-bottom:2rem !important;
-}
-.lototo-login-hero {
-  position:relative !important; overflow:hidden !important;
-  background:linear-gradient(145deg,#12394F 0%,#146B70 58%,#168B83 100%) !important;
-  border:1px solid rgba(255,255,255,.18) !important; border-radius:26px !important;
-  padding:36px 34px 30px !important; min-height:340px !important;
-  box-shadow:0 24px 55px rgba(16,61,77,.18) !important;
-}
-.lototo-login-hero:after {
-  content:"" !important; position:absolute !important; width:230px !important;
-  height:230px !important; right:-90px !important; top:-95px !important;
-  border-radius:50% !important; border:1px solid rgba(255,255,255,.14) !important;
-  box-shadow:0 0 0 24px rgba(255,255,255,.035),0 0 0 50px rgba(255,255,255,.025) !important;
-  pointer-events:none !important;
-}
-.lototo-login-hero .eyebrow {
-  color:#B9F0E6 !important; font-size:.70rem !important; font-weight:850 !important;
-  letter-spacing:.17em !important;
-}
-.lototo-login-hero h2 {
-  color:#FFFFFF !important; font-size:clamp(2rem,3vw,2.65rem) !important;
-  line-height:1.08 !important; letter-spacing:-.045em !important; margin:28px 0 16px !important;
-}
-.lototo-login-hero p {
-  color:#E0F0F2 !important; font-size:1rem !important; line-height:1.75 !important;
-}
-.lototo-login-hero .hero-foot {
-  border-top:1px solid rgba(255,255,255,.23) !important; padding-top:18px !important;
-  margin-top:30px !important; color:#E5F6F3 !important; font-size:.84rem !important;
-  font-weight:600 !important;
-}
-.stApp h2 { color:#143B52 !important; letter-spacing:-.035em !important; }
-.stApp [data-testid="stCaptionContainer"] { color:#61798A !important; }
-
-/* Segmented Sign In / Create Account switch */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-  display:flex !important; align-items:center !important; gap:7px !important;
-  width:100% !important; padding:6px !important; margin:16px 0 !important;
-  background:#E7EFF3 !important; border:1px solid #D9E4E9 !important;
-  border-radius:14px !important; box-shadow:inset 0 1px 2px rgba(20,55,72,.035) !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"] {
-  flex:1 1 50% !important; justify-content:center !important; min-height:44px !important;
-  padding:0 15px !important; margin:0 !important; border:1px solid transparent !important;
-  border-radius:10px !important; background:transparent !important;
-  color:#496578 !important; -webkit-text-fill-color:#496578 !important;
-  font-size:.91rem !important; font-weight:700 !important; opacity:1 !important;
-  outline:none !important; box-shadow:none !important; transition:all .18s ease !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] p,
-.stApp [data-testid="stTabs"] button[role="tab"] span {
-  color:inherit !important; -webkit-text-fill-color:currentColor !important;
-  font-weight:inherit !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"]:hover {
-  background:#DCE8ED !important; color:#183F54 !important;
-  -webkit-text-fill-color:#183F54 !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-  background:#FFFFFF !important; border:1px solid #D6E3E8 !important;
-  color:#087C75 !important; -webkit-text-fill-color:#087C75 !important;
-  font-weight:800 !important; box-shadow:0 3px 9px rgba(20,55,72,.10) !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] * {
-  color:#087C75 !important; -webkit-text-fill-color:#087C75 !important;
-}
-.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-border"] {
-  display:none !important; height:0 !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"]:focus,
-.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible {
-  outline:none !important; box-shadow:0 3px 9px rgba(20,55,72,.10) !important;
-}
-
-/* Form card and inputs */
-.stApp [data-testid="stForm"] {
-  background:rgba(255,255,255,.96) !important; border:1px solid #DFE9EE !important;
-  border-radius:19px !important; padding:1.35rem 1.35rem 1.15rem !important;
-  box-shadow:0 12px 34px rgba(26,65,84,.07) !important;
-}
-.stApp [data-testid="stWidgetLabel"],
-.stApp [data-testid="stWidgetLabel"] *,
-.stApp label,.stApp label * {
-  color:#24485D !important; -webkit-text-fill-color:#24485D !important;
-  font-weight:700 !important;
-}
-.stApp [data-testid="stTextInput"] div[data-baseweb="input"],
-.stApp [data-testid="stTextInput"] div[data-baseweb="base-input"],
-.stApp div[data-baseweb="input"],.stApp div[data-baseweb="base-input"] {
-  background:#FFFFFF !important; background-color:#FFFFFF !important;
-  border:1.5px solid #CBD9E0 !important; border-radius:11px !important; box-shadow:none !important;
-}
-.stApp [data-testid="stTextInput"] input,
-.stApp div[data-baseweb="input"] input,.stApp div[data-baseweb="base-input"] input {
-  background:#FFFFFF !important; background-color:#FFFFFF !important;
-  color:#101820 !important; -webkit-text-fill-color:#101820 !important;
-  caret-color:#087C75 !important; opacity:1 !important; font-weight:600 !important;
-  text-shadow:none !important; border:0 !important; box-shadow:none !important;
-}
-.stApp [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
-.stApp [data-testid="stTextInput"] div[data-baseweb="base-input"]:focus-within,
-.stApp div[data-baseweb="input"]:focus-within,.stApp div[data-baseweb="base-input"]:focus-within {
-  border:1.5px solid #168B83 !important;
-  box-shadow:0 0 0 3px rgba(22,139,131,.12) !important;
-}
-.stApp input::placeholder {
-  color:#82939C !important; -webkit-text-fill-color:#82939C !important; opacity:1 !important;
-}
-.stApp input:-webkit-autofill,.stApp input:-webkit-autofill:hover,.stApp input:-webkit-autofill:focus {
-  -webkit-text-fill-color:#101820 !important;
-  -webkit-box-shadow:0 0 0 1000px #FFFFFF inset !important;
-}
-.stApp [data-testid="stTextInput"] button {
-  background:#FFFFFF !important; color:#087C75 !important; border:0 !important;
-}
-.stApp [data-testid="stFormSubmitButton"] button {
-  min-height:46px !important; border:0 !important; border-radius:11px !important;
-  background:linear-gradient(100deg,#087F78 0%,#11968A 100%) !important;
-  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  font-weight:800 !important; box-shadow:0 7px 16px rgba(8,127,120,.18) !important;
-  transition:transform .16s ease,box-shadow .16s ease !important;
-}
-.stApp [data-testid="stFormSubmitButton"] button:hover {
-  transform:translateY(-1px) !important; box-shadow:0 10px 20px rgba(8,127,120,.24) !important;
-}
-.stApp [data-testid="stFormSubmitButton"] button *,
-.stApp [data-testid="stFormSubmitButton"] button p {
-  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:800 !important;
-}
-.auth-footer {
-  color:#718899 !important; text-align:center !important; font-size:.78rem !important;
-  margin-top:1.5rem !important;
-}
-@media(max-width:850px) {
-  .stApp [data-testid="stAppViewContainer"] .main .block-container { padding-top:1.5rem !important; }
-  .lototo-login-hero { min-height:230px !important; padding:26px !important; margin-bottom:1.1rem !important; }
-  .lototo-login-hero h2 { font-size:1.8rem !important; margin-top:17px !important; }
-}
-</style>
-""", unsafe_allow_html=True)
-
 if "authenticated_user" not in st.session_state:
     st.session_state.authenticated_user = None
 
@@ -1514,19 +1329,18 @@ if st.session_state.authenticated_user is None:
         </div>
         """, unsafe_allow_html=True)
     with auth_col:
-        st.markdown(
-            "<div style='color:#087C75;font-size:.70rem;font-weight:850;"
-            "letter-spacing:.16em;text-transform:uppercase;margin-bottom:.45rem;'>"
-            "SECURE WORKSPACE</div>"
-            "<h1 style='color:#143B52;font-size:2.45rem;line-height:1.08;"
-            "letter-spacing:-.045em;margin:0 0 .55rem 0;'>Welcome back</h1>"
-            "<p style='color:#61798A;font-size:.96rem;margin:0 0 .4rem 0;'>"
-            "Masuk ke akun Anda atau buat akun baru untuk melanjutkan.</p>",
-            unsafe_allow_html=True
+        st.markdown("## Welcome")
+        st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
+        # Custom segmented switch (radio) replaces st.tabs completely.
+        auth_view = st.radio(
+            "Authentication view",
+            ["Sign In", "Create Account"],
+            horizontal=True,
+            key="auth_view",
+            label_visibility="collapsed"
         )
-        login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
 
-        with login_tab:
+        if auth_view == "Sign In":
             with st.form("lototo_signin_form", clear_on_submit=False):
                 login_username = st.text_input("Username", key="signin_username")
                 login_password = st.text_input("Password", type="password", key="signin_password")
@@ -1546,7 +1360,7 @@ if st.session_state.authenticated_user is None:
                     except Exception as exc:
                         st.error(f"Gagal memeriksa akun: {exc}")
 
-        with signup_tab:
+        else:
             with st.form("lototo_signup_form", clear_on_submit=True):
                 signup_name = st.text_input("Nama lengkap", key="signup_full_name")
                 signup_username = st.text_input("Buat username", key="signup_username")
