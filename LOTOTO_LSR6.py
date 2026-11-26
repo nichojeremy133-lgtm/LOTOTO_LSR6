@@ -93,103 +93,6 @@ div[aria-selected="true"] {
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
 }
-
-/* SIGN IN / CREATE ACCOUNT TABS: WHITE SURFACE IN ALL STATES */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    padding: 0 !important;
-    border-bottom: 1px solid #D9E3E8 !important;
-    box-shadow: none !important;
-    gap: 18px !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"],
-.stApp [data-testid="stTabs"] button[role="tab"]:hover,
-.stApp [data-testid="stTabs"] button[role="tab"]:focus,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    opacity: 1 !important;
-}
-
-/* Inactive tab text */
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] p {
-    color: #526B7B !important;
-    -webkit-text-fill-color: #526B7B !important;
-    font-weight: 650 !important;
-}
-
-/* Active tab: same white background, teal text and underline only */
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
-    font-weight: 800 !important;
-    border-bottom: 2px solid #087C75 !important;
-}
-
-
-/* FINAL LOGIN TAB OVERRIDE: WHITE TAB SURFACE; ONLY LABEL COLOR CHANGES */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"],
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] > div {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-}
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"],
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:hover,
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:focus,
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]:active,
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    background-image: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    outline: none !important;
-    opacity: 1 !important;
-}
-/* BaseWeb sometimes paints the tab surface on a nested element */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"] > div,
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"] > div > div {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-}
-/* Unselected label */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"],
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="false"] * {
-    color: #526B7B !important;
-    -webkit-text-fill-color: #526B7B !important;
-}
-/* Selected label: teal, underline only; still white behind it */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] * {
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
-    font-weight: 800 !important;
-}
-/* Selected indicator line */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] [data-baseweb="tab-highlight"] {
-    background-color: #087C75 !important;
-    height: 2px !important;
-}
-/* Remove dark hover/focus overlay from any tab */
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]::before,
-.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"] button[role="tab"]::after {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -483,75 +386,6 @@ div[data-testid="stAlert"] { border-radius: 12px; }
     .block-container { padding-top: 1rem; }
     .lototo-login-hero { min-height: 190px; margin-bottom: 1rem; }
     .lototo-login-hero h2 { font-size: 1.55rem; }
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-# ============================================================
-# DEFINITIVE SIGN-IN TABS OVERRIDE
-# Must be after the general UI theme CSS above.
-# ============================================================
-st.markdown("""
-<style>
-/* Tab strip and all tab buttons: always white, including hover/focus/selected */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] > div {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    background-image: none !important;
-    box-shadow: none !important;
-}
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[data-baseweb="tab"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button:hover,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button:focus,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button:focus-visible,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button:active,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="false"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    background-image: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    outline: none !important;
-}
-
-/* Also neutralize nested wrappers which BaseWeb may paint */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button *,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button > div,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button > div > div {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-}
-
-/* Inactive tab label */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="false"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="false"] *,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="false"] p {
-    color: #526B7B !important;
-    -webkit-text-fill-color: #526B7B !important;
-    font-weight: 650 !important;
-}
-
-/* Active tab label only changes color; no filled box */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] *,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] p {
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
-    font-weight: 800 !important;
-}
-
-/* Active indicator is the only colored selection treatment */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"] {
-    background: #087C75 !important;
-    background-color: #087C75 !important;
-    height: 2px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1448,6 +1282,58 @@ if st.session_state.authenticated_user is None:
     with auth_col:
         st.markdown("## Welcome")
         st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
+        st.markdown("""
+        <style>
+        .stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
+        .stApp [data-testid="stTabs"] div[role="tablist"] {
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            padding: 0 0 8px 0 !important;
+            gap: 18px !important;
+        }
+        .stApp [data-testid="stTabs"] button[role="tab"],
+        .stApp [data-testid="stTabs"] button[role="tab"] > div,
+        .stApp [data-testid="stTabs"] button[role="tab"] p {
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            color: #29485B !important;
+            -webkit-text-fill-color: #29485B !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            opacity: 1 !important;
+            outline: none !important;
+            font-weight: 650 !important;
+        }
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] > div,
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            color: #087C75 !important;
+            -webkit-text-fill-color: #087C75 !important;
+            box-shadow: inset 0 -2px 0 #168B83 !important;
+            font-weight: 750 !important;
+        }
+        .stApp [data-testid="stTabs"] button[role="tab"]:hover,
+        .stApp [data-testid="stTabs"] button[role="tab"]:focus,
+        .stApp [data-testid="stTabs"] button[role="tab"]:focus-visible {
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:hover,
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:focus,
+        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:focus-visible {
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            box-shadow: inset 0 -2px 0 #168B83 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
 
         with login_tab:
