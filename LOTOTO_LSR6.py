@@ -93,6 +93,19 @@ div[aria-selected="true"] {
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
 }
+
+/* Force the Sign In / Create Account tab surfaces to stay white */
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab-list"],
+.stApp div[data-testid="stTabs"] div[data-baseweb="tab"],
+.stApp div[data-testid="stTabs"] button[role="tab"],
+.stApp div[data-testid="stTabs"] button[role="tab"]:hover,
+.stApp div[data-testid="stTabs"] button[role="tab"]:focus,
+.stApp div[data-testid="stTabs"] button[role="tab"]:focus-visible,
+.stApp div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background-color: #FFFFFF !important;
+    background-image: none !important;
+    outline: 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -191,25 +204,42 @@ st.markdown("""
     font-weight: 400 !important;
 }
 
-/* Tabs: light background, readable dark text */
+/* Sign In / Create Account tabs: WHITE background in every state */
 .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: #EDF3F6 !important;
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
     border-bottom: 1px solid #D7E2E7 !important;
 }
 .stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"]:hover,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
 .stApp [data-testid="stTabs"] button[role="tab"] *,
 .stApp [data-testid="stTabs"] button[role="tab"] p {
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
     opacity: 1 !important;
-    font-weight: 700 !important;
 }
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
     color: #087C75 !important;
     -webkit-text-fill-color: #087C75 !important;
     font-weight: 800 !important;
+    box-shadow: inset 0 -3px 0 #168B83 !important;
 }
 
 /* Helper/caption text */
