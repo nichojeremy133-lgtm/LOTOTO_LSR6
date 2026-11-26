@@ -1339,6 +1339,125 @@ def authenticate_app_user(username: str, password: str):
     return {"id": user_row[0], "username": user_row[1], "full_name": user_row[2]}
 
 
+
+# ============================================================
+# FINAL LOGIN TAB OVERRIDE - MODERN SEGMENTED CONTROL
+# Must stay immediately before the authentication UI.
+# ============================================================
+st.markdown("""
+<style>
+/* Tab rail */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: fit-content !important;
+    min-width: 360px !important;
+    padding: 6px !important;
+    margin: 10px 0 14px 0 !important;
+    background: #EAF1F5 !important;
+    border: 1px solid #D6E2E8 !important;
+    border-radius: 13px !important;
+    box-shadow: none !important;
+}
+
+/* Both tabs */
+.stApp [data-testid="stTabs"] button[role="tab"] {
+    flex: 1 1 0 !important;
+    min-height: 40px !important;
+    justify-content: center !important;
+    padding: 0 17px !important;
+    margin: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #34566A !important;
+    -webkit-text-fill-color: #34566A !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease !important;
+}
+
+/* Streamlit renders tab labels in nested elements */
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p,
+.stApp [data-testid="stTabs"] button[role="tab"] span {
+    color: #34566A !important;
+    -webkit-text-fill-color: #34566A !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+
+/* Hover state */
+.stApp [data-testid="stTabs"] button[role="tab"]:hover {
+    background: #DCE8ED !important;
+    color: #17384B !important;
+    -webkit-text-fill-color: #17384B !important;
+}
+
+/* Active tab: white pill, teal text */
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #D2E1E7 !important;
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 7px rgba(25, 55, 70, .12) !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] span {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+    font-weight: 800 !important;
+}
+
+/* Remove Streamlit's default underline/highlight */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
+.stApp [data-testid="stTabs"] [data-baseweb="tab-border"] {
+    display: none !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+/* Prevent the dark focus block and pink focus border visible in the screenshot */
+.stApp [data-testid="stTabs"] button[role="tab"]:focus,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible,
+.stApp [data-testid="stTabs"] button[role="tab"]:active {
+    outline: none !important;
+    background-color: #FFFFFF !important;
+    border-color: #D2E1E7 !important;
+    box-shadow: 0 2px 7px rgba(25, 55, 70, .12) !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"]:focus *,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible * {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+}
+
+/* Keep tab panel border subtle */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-panel"] {
+    border-top: 0 !important;
+    padding-top: 2px !important;
+}
+
+@media (max-width: 700px) {
+    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .stApp [data-testid="stTabs"] button[role="tab"] {
+        padding: 0 10px !important;
+        font-size: 13px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 if "authenticated_user" not in st.session_state:
     st.session_state.authenticated_user = None
 
