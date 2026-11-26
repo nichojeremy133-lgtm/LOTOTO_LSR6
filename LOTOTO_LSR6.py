@@ -36,49 +36,47 @@ st.set_page_config(
 
 
 # ============================================================
-# SIGN IN / CREATE ACCOUNT TABS - WHITE BACKGROUND OVERRIDE
+# LOGIN TABS - REMOVE DARK FOCUS / HOVER BOX
 # ============================================================
 st.markdown("""
 <style>
-.stApp [data-testid="stTabs"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-}
+/* Keep Sign In / Create Account tabs flat and light in every state.
+   This removes the dark rectangle caused by hover/focus/selected styling. */
 .stApp [data-testid="stTabs"] button[role="tab"],
 .stApp [data-testid="stTabs"] button[role="tab"]:hover,
 .stApp [data-testid="stTabs"] button[role="tab"]:focus,
 .stApp [data-testid="stTabs"] button[role="tab"]:focus-visible,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    box-shadow: none !important;
-    outline: none !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"] > div,
-.stApp [data-testid="stTabs"] button[role="tab"] > div *,
-.stApp [data-testid="stTabs"] button[role="tab"] p,
-.stApp [data-testid="stTabs"] button[role="tab"] span {
+.stApp [data-testid="stTabs"] button[role="tab"]:active,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
     background: transparent !important;
     background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
 }
-.stApp [data-testid="stTabs"] button[role="tab"],
+
+/* Prevent nested elements or pseudo-elements from drawing a dark box */
 .stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] p {
+.stApp [data-testid="stTabs"] button[role="tab"]::before,
+.stApp [data-testid="stTabs"] button[role="tab"]::after {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Maintain readable text and show active tab with a teal underline only */
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"] * {
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
     opacity: 1 !important;
     font-weight: 700 !important;
 }
 .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] * {
     color: #087C75 !important;
     -webkit-text-fill-color: #087C75 !important;
-}
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]::after {
-    background: #168B83 !important;
+    border-bottom: 2px solid #087C75 !important;
 }
 </style>
 """, unsafe_allow_html=True)
