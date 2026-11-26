@@ -36,6 +36,56 @@ st.set_page_config(
 
 
 # ============================================================
+# SIGN IN / CREATE ACCOUNT TABS - WHITE BACKGROUND OVERRIDE
+# ============================================================
+st.markdown("""
+<style>
+.stApp [data-testid="stTabs"],
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"]:hover,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus,
+.stApp [data-testid="stTabs"] button[role="tab"]:focus-visible,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="false"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"] > div,
+.stApp [data-testid="stTabs"] button[role="tab"] > div *,
+.stApp [data-testid="stTabs"] button[role="tab"] p,
+.stApp [data-testid="stTabs"] button[role="tab"] span {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p {
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+}
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]::after {
+    background: #168B83 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# ============================================================
 # SIDEBAR MENU - HIGH CONTRAST DARK SELECTBOX
 # ============================================================
 st.markdown("""
@@ -1282,58 +1332,6 @@ if st.session_state.authenticated_user is None:
     with auth_col:
         st.markdown("## Welcome")
         st.caption("Masuk ke akun Anda atau buat akun baru untuk melanjutkan.")
-        st.markdown("""
-        <style>
-        .stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
-        .stApp [data-testid="stTabs"] div[role="tablist"] {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            border: 0 !important;
-            box-shadow: none !important;
-            padding: 0 0 8px 0 !important;
-            gap: 18px !important;
-        }
-        .stApp [data-testid="stTabs"] button[role="tab"],
-        .stApp [data-testid="stTabs"] button[role="tab"] > div,
-        .stApp [data-testid="stTabs"] button[role="tab"] p {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            color: #29485B !important;
-            -webkit-text-fill-color: #29485B !important;
-            border: 0 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            opacity: 1 !important;
-            outline: none !important;
-            font-weight: 650 !important;
-        }
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] > div,
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            color: #087C75 !important;
-            -webkit-text-fill-color: #087C75 !important;
-            box-shadow: inset 0 -2px 0 #168B83 !important;
-            font-weight: 750 !important;
-        }
-        .stApp [data-testid="stTabs"] button[role="tab"]:hover,
-        .stApp [data-testid="stTabs"] button[role="tab"]:focus,
-        .stApp [data-testid="stTabs"] button[role="tab"]:focus-visible {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            outline: none !important;
-            box-shadow: none !important;
-        }
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:hover,
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:focus,
-        .stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"]:focus-visible {
-            background: #FFFFFF !important;
-            background-color: #FFFFFF !important;
-            box-shadow: inset 0 -2px 0 #168B83 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
         login_tab, signup_tab = st.tabs(["Sign In", "Create Account"])
 
         with login_tab:
