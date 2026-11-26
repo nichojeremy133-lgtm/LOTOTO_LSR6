@@ -35,68 +35,6 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# SIDEBAR MENU - HIGH CONTRAST DARK SELECTBOX
-# ============================================================
-st.markdown("""
-<style>
-/* Selected value in the collapsed sidebar dropdown */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"],
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-    background-color: #2D2A27 !important;
-    color: #FFFFFF !important;
-    border-color: #514C46 !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] *,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] span,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-    fill: #FFFFFF !important;
-    color: #FFFFFF !important;
-}
-
-/* Dropdown popup options */
-div[data-baseweb="popover"] ul,
-div[data-baseweb="popover"] li,
-div[data-baseweb="menu"],
-div[data-baseweb="menu"] *,
-div[role="listbox"],
-div[role="listbox"] *,
-div[role="option"],
-div[role="option"] * {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-div[data-baseweb="popover"] ul,
-div[data-baseweb="menu"],
-div[role="listbox"] {
-    background-color: #2D2A27 !important;
-}
-div[data-baseweb="popover"] li,
-div[role="option"] {
-    background-color: #2D2A27 !important;
-}
-div[data-baseweb="popover"] li:hover,
-div[role="option"]:hover,
-div[aria-selected="true"] {
-    background-color: #49443E !important;
-}
-
-/* Sidebar dropdown label */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] label,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] label * {
-    color: #29485B !important;
-    -webkit-text-fill-color: #29485B !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
 
 # ============================================================
 # ALERT / STATUS BOX TEXT CONTRAST
@@ -388,6 +326,57 @@ div[data-testid="stMetricValue"] { color: #17384a; font-weight: 800; }
 }
 hr { border-color: #dce7ec; }
 div[data-testid="stAlert"] { border-radius: 12px; }
+
+/* SIDEBAR PAGE SELECTOR: charcoal surface + high-contrast white text */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"],
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div > div {
+    background: #2D2A27 !important;
+    background-color: #2D2A27 !important;
+    border-color: #514C46 !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] *,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+}
+/* Dropdown popup and options */
+div[data-baseweb="popover"] div[role="listbox"],
+div[data-baseweb="popover"] ul,
+div[data-baseweb="popover"] li,
+div[data-baseweb="popover"] [role="option"] {
+    background: #2D2A27 !important;
+    background-color: #2D2A27 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+div[data-baseweb="popover"] li *,
+div[data-baseweb="popover"] [role="option"] * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+div[data-baseweb="popover"] li:hover,
+div[data-baseweb="popover"] [role="option"]:hover,
+div[data-baseweb="popover"] [aria-selected="true"] {
+    background: #49443E !important;
+    background-color: #49443E !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
 .lototo-brand {
     background: linear-gradient(135deg, #153c50 0%, #187f7a 100%);
     color: white; padding: 18px 18px 16px; border-radius: 17px;
