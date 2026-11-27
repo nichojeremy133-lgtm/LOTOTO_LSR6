@@ -273,7 +273,7 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 { color: #17384a; }
-/* SIDEBAR WORKSPACE DROPDOWN — consolidated authoritative styling */
+/* SIDEBAR WORKSPACE DROPDOWN — explicit BaseWeb value + menu option colors */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
     color: #456173 !important;
@@ -281,25 +281,41 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
     font-weight: 700 !important;
 }
 
-/* Closed control: force dark surface and white selected value on BaseWeb layers */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div > div {
+/* Dropdown control itself */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
     background: #2D2A27 !important;
     background-color: #2D2A27 !important;
-    border-color: #514C46 !important;
+    border: 1px solid #514C46 !important;
+    border-radius: 9px !important;
 }
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] [data-testid],
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p,
+
+/* The selected value is rendered in BaseWeb's value/combobox nodes.
+   Target the actual text-bearing nodes, not only the outer select wrapper. */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [aria-live],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [aria-live] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [class*="singleValue"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [class*="SingleValue"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [class*="value"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [class*="Value"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input {
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p {
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
     text-shadow: none !important;
 }
+
+/* Ensure every layer of the closed control keeps its charcoal background */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div > div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] {
+    background-color: #2D2A27 !important;
+}
+
+/* Chevron */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg path {
     color: #FFFFFF !important;
@@ -308,18 +324,14 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
     opacity: 1 !important;
 }
 
-/* Open popup is portalled outside the sidebar DOM, so target BaseWeb menu globally */
-body [data-baseweb="popover"],
-body [data-baseweb="popover"] [data-baseweb="menu"],
-body [data-baseweb="popover"] [role="listbox"],
+/* BaseWeb dropdown is rendered in a portal outside the sidebar.
+   Style each option's actual label separately from the option surface. */
 body [data-baseweb="popover"] [role="option"],
 body [data-baseweb="popover"] [role="option"] *,
-body [data-baseweb="menu"],
-body [data-baseweb="menu"] *,
-body [role="listbox"],
-body [role="listbox"] *,
-body [role="option"],
-body [role="option"] * {
+body [data-baseweb="menu"] [role="option"],
+body [data-baseweb="menu"] [role="option"] *,
+body [role="listbox"] [role="option"],
+body [role="listbox"] [role="option"] * {
     background-color: #2D2A27 !important;
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
@@ -329,12 +341,13 @@ body [data-baseweb="popover"] [role="option"]:hover,
 body [data-baseweb="popover"] [role="option"][aria-selected="true"],
 body [data-baseweb="menu"] [role="option"]:hover,
 body [data-baseweb="menu"] [role="option"][aria-selected="true"],
-body [role="option"]:hover,
-body [role="option"][aria-selected="true"] {
+body [role="listbox"] [role="option"]:hover,
+body [role="listbox"] [role="option"][aria-selected="true"] {
     background-color: #49443E !important;
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
 }
+
 .stApp [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
