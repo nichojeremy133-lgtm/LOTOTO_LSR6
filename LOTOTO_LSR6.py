@@ -36,63 +36,54 @@ st.set_page_config(
 
 
 # ============================================================
-# SIDEBAR MENU - MODERN VERTICAL NAVIGATION
+# SIDEBAR MENU - WHITE DROPDOWN WITH DARK, READABLE TEXT
 st.markdown("""
 <style>
-/* Sidebar radio navigation becomes a stack of clean menu tiles */
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] {
-    margin-top: 4px !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 7px !important;
-    width: 100% !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label {
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-    min-height: 42px !important;
-    padding: 0 14px !important;
-    margin: 0 !important;
-    border: 1px solid #D8E5E9 !important;
+/* Closed dropdown: white surface and dark selected-page text */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #D5E2E8 !important;
     border-radius: 10px !important;
-    background: rgba(255,255,255,.82) !important;
+    min-height: 44px !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
+    color: #183247 !important;
+    fill: #183247 !important;
+}
+
+/* Open dropdown: white menu and dark option labels */
+body div[data-baseweb="popover"] [role="listbox"],
+body div[data-baseweb="popover"] [role="option"],
+body div[data-baseweb="popover"] [role="option"] * {
+    background-color: #FFFFFF !important;
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    opacity: 1 !important;
+}
+body div[data-baseweb="popover"] [role="option"]:hover,
+body div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
+    background-color: #EAF3F5 !important;
+    color: #087C75 !important;
+    -webkit-text-fill-color: #087C75 !important;
+}
+
+/* Keep the field label legible on the pale sidebar */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
-    font-weight: 650 !important;
-    cursor: pointer !important;
-    transition: all .16s ease !important;
+    font-weight: 700 !important;
 }
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {
-    display: none !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label p,
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label span {
-    color: inherit !important;
-    -webkit-text-fill-color: currentColor !important;
-    font-weight: inherit !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
-    background: linear-gradient(135deg, #147F79, #176B73) !important;
-    border-color: #147F79 !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    box-shadow: 0 4px 12px rgba(20,127,121,.18) !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) p,
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) span {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:hover:not(:has(input:checked)) {
-    background: #E5F0F2 !important;
-    border-color: #B8D1D7 !important;
-    color: #17384A !important;
-    -webkit-text-fill-color: #17384A !important;
-}
-/* Remove old selectbox menu surface styling; navigation no longer uses selectbox. */
 </style>
 """, unsafe_allow_html=True)
 
@@ -1664,13 +1655,11 @@ if saved_menu not in menu_options:
 if st.session_state.get("workspace_menu") not in menu_options:
     st.session_state["workspace_menu"] = saved_menu
 
-st.sidebar.markdown("**Pilih halaman**")
-menu = st.sidebar.radio(
-    "Workspace navigation",
+menu = st.sidebar.selectbox(
+    "Pilih halaman",
     menu_options,
     index=menu_options.index(st.session_state["workspace_menu"]),
-    key="workspace_menu",
-    label_visibility="collapsed"
+    key="workspace_menu"
 )
 if st.query_params.get("menu") != menu:
     st.query_params["menu"] = menu
