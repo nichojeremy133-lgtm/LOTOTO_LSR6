@@ -36,61 +36,6 @@ st.set_page_config(
 
 
 # ============================================================
-# SIDEBAR MENU - DARK DROPDOWN WITH WHITE, READABLE TEXT
-st.markdown("""
-<style>
-/* Closed dropdown: charcoal surface, white selected-page text */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-    background: #2D2A27 !important;
-    background-color: #2D2A27 !important;
-    border: 1px solid #514C46 !important;
-    border-radius: 10px !important;
-    min-height: 44px !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-    color: #FFFFFF !important;
-    fill: #FFFFFF !important;
-    opacity: 1 !important;
-}
-
-/* Open dropdown: charcoal menu with white option labels */
-body div[data-baseweb="popover"] [role="listbox"],
-body div[data-baseweb="popover"] [role="option"],
-body div[data-baseweb="popover"] [role="option"] * {
-    background-color: #2D2A27 !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-body div[data-baseweb="popover"] [role="option"]:hover,
-body div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
-    background-color: #49443E !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-
-/* Keep the field label legible on the pale sidebar */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
-    color: #29485B !important;
-    -webkit-text-fill-color: #29485B !important;
-    font-weight: 700 !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-
-# ============================================================
 # ALERT / STATUS BOX TEXT CONTRAST
 # ============================================================
 st.markdown("""
@@ -328,17 +273,69 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 { color: #17384a; }
-[data-testid="stSidebar"] [data-testid="stSelectbox"] > label {
-    color: #456173 !important; font-weight: 700 !important;
+/* SIDEBAR WORKSPACE DROPDOWN — consolidated authoritative styling */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
+    color: #456173 !important;
+    -webkit-text-fill-color: #456173 !important;
+    font-weight: 700 !important;
+}
+
+/* Closed control: force dark surface and white selected value on BaseWeb layers */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div > div {
+    background: #2D2A27 !important;
+    background-color: #2D2A27 !important;
+    border-color: #514C46 !important;
 }
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] * {
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] [data-testid],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg path {
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+/* Open popup is portalled outside the sidebar DOM, so target BaseWeb menu globally */
+body [data-baseweb="popover"],
+body [data-baseweb="popover"] [data-baseweb="menu"],
+body [data-baseweb="popover"] [role="listbox"],
+body [data-baseweb="popover"] [role="option"],
+body [data-baseweb="popover"] [role="option"] *,
+body [data-baseweb="menu"],
+body [data-baseweb="menu"] *,
+body [role="listbox"],
+body [role="listbox"] *,
+body [role="option"],
+body [role="option"] * {
     background-color: #2D2A27 !important;
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }
-.stApp [data-testid="stMain"] [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+body [data-baseweb="popover"] [role="option"]:hover,
+body [data-baseweb="popover"] [role="option"][aria-selected="true"],
+body [data-baseweb="menu"] [role="option"]:hover,
+body [data-baseweb="menu"] [role="option"][aria-selected="true"],
+body [role="option"]:hover,
+body [role="option"][aria-selected="true"] {
+    background-color: #49443E !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
 [data-testid="stNumberInput"] input,
