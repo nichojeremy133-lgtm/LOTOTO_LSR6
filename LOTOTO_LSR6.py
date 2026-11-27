@@ -36,52 +36,63 @@ st.set_page_config(
 
 
 # ============================================================
-# SIDEBAR MENU - WHITE TEXT ON DARK SELECTBOX
+# SIDEBAR MENU - MODERN VERTICAL NAVIGATION
 st.markdown("""
 <style>
-/* Selected page value: keep the dark box, force every visible glyph to white */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-    background: #2D2A27 !important;
-    background-color: #2D2A27 !important;
-    border-color: #514C46 !important;
+/* Sidebar radio navigation becomes a stack of clean menu tiles */
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] {
+    margin-top: 4px !important;
 }
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    width: 100% !important;
 }
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-    color: #FFFFFF !important;
-    fill: #FFFFFF !important;
-    opacity: 1 !important;
-}
-
-/* Dropdown list, including option labels and selected/hovered option */
-body div[data-baseweb="popover"] [role="listbox"],
-body div[data-baseweb="popover"] [role="listbox"] *,
-body div[data-baseweb="popover"] [role="option"],
-body div[data-baseweb="popover"] [role="option"] * {
-    background-color: #2D2A27 !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-body div[data-baseweb="popover"] [role="option"]:hover,
-body div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
-    background-color: #49443E !important;
-}
-
-/* The label above the dropdown remains dark on the light sidebar */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 0 14px !important;
+    margin: 0 !important;
+    border: 1px solid #D8E5E9 !important;
+    border-radius: 10px !important;
+    background: rgba(255,255,255,.82) !important;
     color: #29485B !important;
     -webkit-text-fill-color: #29485B !important;
+    font-weight: 650 !important;
+    cursor: pointer !important;
+    transition: all .16s ease !important;
 }
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {
+    display: none !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label p,
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label span {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-weight: inherit !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+    background: linear-gradient(135deg, #147F79, #176B73) !important;
+    border-color: #147F79 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(20,127,121,.18) !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) p,
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) span {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stRadio"] label:hover:not(:has(input:checked)) {
+    background: #E5F0F2 !important;
+    border-color: #B8D1D7 !important;
+    color: #17384A !important;
+    -webkit-text-fill-color: #17384A !important;
+}
+/* Remove old selectbox menu surface styling; navigation no longer uses selectbox. */
 </style>
 """, unsafe_allow_html=True)
 
@@ -335,7 +346,7 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }
-.stApp [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+.stApp [data-testid="stMain"] [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
 [data-testid="stNumberInput"] input,
@@ -727,6 +738,19 @@ def initialize_database(database_url):
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         is_active BOOLEAN NOT NULL DEFAULT TRUE
     )
+    """)
+    db_cursor.execute("""
+    CREATE TABLE IF NOT EXISTS public.app_login_sessions (
+        token_hash TEXT PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES public.app_users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        revoked_at TIMESTAMPTZ
+    )
+    """)
+    db_cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_app_login_sessions_user
+    ON public.app_login_sessions(user_id)
     """)
     db_conn.commit()
 
@@ -1307,6 +1331,93 @@ def authenticate_app_user(username: str, password: str):
     return {"id": user_row[0], "username": user_row[1], "full_name": user_row[2]}
 
 
+def create_persistent_login_session(user_id: int) -> str:
+    """Create a revocable 30-day login token; only its SHA-256 hash is stored."""
+    raw_token = secrets.token_urlsafe(40)
+    token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO public.app_login_sessions (token_hash, user_id, expires_at)
+            VALUES (%s, %s, NOW() + INTERVAL '30 days')
+            """,
+            (token_hash, user_id)
+        )
+        conn.commit()
+        return raw_token
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+
+
+def get_user_from_persistent_session(raw_token: str):
+    if not raw_token or len(raw_token) > 200:
+        return None
+    token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT u.id, u.username, u.full_name
+            FROM public.app_login_sessions s
+            JOIN public.app_users u ON u.id = s.user_id
+            WHERE s.token_hash = %s
+              AND s.revoked_at IS NULL
+              AND s.expires_at > NOW()
+              AND u.is_active = TRUE
+            """,
+            (token_hash,)
+        )
+        row = cur.fetchone()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+    if not row:
+        return None
+    return {"id": row[0], "username": row[1], "full_name": row[2]}
+
+
+def revoke_persistent_login_session(raw_token: str):
+    if not raw_token:
+        return
+    token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE public.app_login_sessions
+            SET revoked_at = NOW()
+            WHERE token_hash = %s AND revoked_at IS NULL
+            """,
+            (token_hash,)
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+
+
+# Restore authentication after a browser refresh using the revocable URL token.
+if "authenticated_user" not in st.session_state or not isinstance(st.session_state.get("authenticated_user"), dict):
+    st.session_state["authenticated_user"] = None
+
+if st.session_state.get("authenticated_user") is None:
+    saved_login_token = st.query_params.get("auth")
+    if saved_login_token:
+        try:
+            st.session_state["authenticated_user"] = get_user_from_persistent_session(saved_login_token)
+        except Exception as session_error:
+            st.session_state["authenticated_user"] = None
+            st.warning(f"Tidak dapat memulihkan sesi login: {session_error}")
+
 
 if "authenticated_user" not in st.session_state:
     st.session_state.authenticated_user = None
@@ -1348,6 +1459,8 @@ if st.session_state.authenticated_user is None:
                     try:
                         logged_user = authenticate_app_user(login_username.strip().lower(), login_password)
                         if logged_user:
+                            login_token = create_persistent_login_session(logged_user["id"])
+                            st.query_params["auth"] = login_token
                             st.session_state.authenticated_user = logged_user
                             st.success("Sign in berhasil. Membuka aplikasi LOTOTO...")
                             st.rerun()
@@ -1519,7 +1632,14 @@ st.sidebar.markdown("""
 st.sidebar.markdown("**SIGNED IN AS**")
 st.sidebar.markdown(f"👤 {sidebar_user_name}")
 if st.sidebar.button("Sign Out", use_container_width=True):
+    active_login_token = st.query_params.get("auth")
+    try:
+        revoke_persistent_login_session(active_login_token)
+    except Exception as signout_error:
+        st.error(f"Gagal menutup sesi login: {signout_error}")
+        st.stop()
     st.session_state.authenticated_user = None
+    st.session_state.pop("workspace_menu", None)
     st.query_params.clear()
     st.rerun()
 
@@ -1528,18 +1648,32 @@ st.sidebar.markdown(
     "letter-spacing:.12em;margin:18px 0 5px;'>WORKSPACE MENU</div>",
     unsafe_allow_html=True
 )
-menu = st.sidebar.selectbox(
-    "Pilih halaman",
-    [
-        "Dashboard",
-        "Data Mesin",
-        "Start LOTOTO",
-        "LOTOTO Matrix",
-        "Active LOTOTO",
-        "End LOTOTO",
-        "History"
-    ]
+menu_options = [
+    "Dashboard",
+    "Data Mesin",
+    "Start LOTOTO",
+    "LOTOTO Matrix",
+    "Active LOTOTO",
+    "End LOTOTO",
+    "History"
+]
+# Keep the selected workspace page after a browser refresh.
+saved_menu = st.query_params.get("menu", "Dashboard")
+if saved_menu not in menu_options:
+    saved_menu = "Dashboard"
+if st.session_state.get("workspace_menu") not in menu_options:
+    st.session_state["workspace_menu"] = saved_menu
+
+st.sidebar.markdown("**Pilih halaman**")
+menu = st.sidebar.radio(
+    "Workspace navigation",
+    menu_options,
+    index=menu_options.index(st.session_state["workspace_menu"]),
+    key="workspace_menu",
+    label_visibility="collapsed"
 )
+if st.query_params.get("menu") != menu:
+    st.query_params["menu"] = menu
 
 
 def render_open_detail_buttons(dataframe, key_prefix="detail"):
