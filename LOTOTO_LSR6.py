@@ -36,10 +36,10 @@ st.set_page_config(
 
 
 # ============================================================
-# SIDEBAR MENU - DARK DROPDOWN WITH HIGH-CONTRAST WHITE TEXT
+# SIDEBAR MENU - DARK DROPDOWN WITH WHITE, READABLE TEXT
 st.markdown("""
 <style>
-/* Closed dropdown: retain dark charcoal box, force selected text white */
+/* Closed dropdown: charcoal surface, white selected-page text */
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
     background: #2D2A27 !important;
@@ -51,8 +51,7 @@ st.markdown("""
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p {
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div {
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
@@ -63,7 +62,7 @@ st.markdown("""
     opacity: 1 !important;
 }
 
-/* Open dropdown: dark menu with white labels */
+/* Open dropdown: charcoal menu with white option labels */
 body div[data-baseweb="popover"] [role="listbox"],
 body div[data-baseweb="popover"] [role="option"],
 body div[data-baseweb="popover"] [role="option"] * {
