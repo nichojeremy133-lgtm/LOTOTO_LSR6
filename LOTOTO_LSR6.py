@@ -35,6 +35,57 @@ st.set_page_config(
 )
 
 
+# ============================================================
+# SIDEBAR MENU - WHITE TEXT ON DARK SELECTBOX
+st.markdown("""
+<style>
+/* Selected page value: keep the dark box, force every visible glyph to white */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background: #2D2A27 !important;
+    background-color: #2D2A27 !important;
+    border-color: #514C46 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+/* Dropdown list, including option labels and selected/hovered option */
+body div[data-baseweb="popover"] [role="listbox"],
+body div[data-baseweb="popover"] [role="listbox"] *,
+body div[data-baseweb="popover"] [role="option"],
+body div[data-baseweb="popover"] [role="option"] * {
+    background-color: #2D2A27 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+body div[data-baseweb="popover"] [role="option"]:hover,
+body div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
+    background-color: #49443E !important;
+}
+
+/* The label above the dropdown remains dark on the light sidebar */
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
+    color: #29485B !important;
+    -webkit-text-fill-color: #29485B !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 # ============================================================
 # ALERT / STATUS BOX TEXT CONTRAST
@@ -275,9 +326,16 @@ p, label, [data-testid="stCaptionContainer"] { color: var(--lototo-muted); }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h3 { color: #17384a; }
 [data-testid="stSidebar"] [data-testid="stSelectbox"] > label {
-    color: #456173; font-weight: 700;
+    color: #456173 !important; font-weight: 700 !important;
 }
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] * {
+    background-color: #2D2A27 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea,
 [data-testid="stNumberInput"] input,
@@ -326,57 +384,6 @@ div[data-testid="stMetricValue"] { color: #17384a; font-weight: 800; }
 }
 hr { border-color: #dce7ec; }
 div[data-testid="stAlert"] { border-radius: 12px; }
-
-/* SIDEBAR PAGE SELECTOR: charcoal surface + high-contrast white text */
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"],
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div > div {
-    background: #2D2A27 !important;
-    background-color: #2D2A27 !important;
-    border-color: #514C46 !important;
-    color: #FFFFFF !important;
-    box-shadow: none !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] *,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] span,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-    color: #FFFFFF !important;
-    fill: #FFFFFF !important;
-}
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] > label * {
-    color: #29485B !important;
-    -webkit-text-fill-color: #29485B !important;
-}
-/* Dropdown popup and options */
-div[data-baseweb="popover"] div[role="listbox"],
-div[data-baseweb="popover"] ul,
-div[data-baseweb="popover"] li,
-div[data-baseweb="popover"] [role="option"] {
-    background: #2D2A27 !important;
-    background-color: #2D2A27 !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-div[data-baseweb="popover"] li *,
-div[data-baseweb="popover"] [role="option"] * {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-div[data-baseweb="popover"] li:hover,
-div[data-baseweb="popover"] [role="option"]:hover,
-div[data-baseweb="popover"] [aria-selected="true"] {
-    background: #49443E !important;
-    background-color: #49443E !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}
 .lototo-brand {
     background: linear-gradient(135deg, #153c50 0%, #187f7a 100%);
     color: white; padding: 18px 18px 16px; border-radius: 17px;
