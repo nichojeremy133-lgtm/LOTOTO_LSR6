@@ -36,45 +36,47 @@ st.set_page_config(
 
 
 # ============================================================
-# SIDEBAR MENU - WHITE DROPDOWN WITH DARK, READABLE TEXT
+# SIDEBAR MENU - DARK DROPDOWN WITH HIGH-CONTRAST WHITE TEXT
 st.markdown("""
 <style>
-/* Closed dropdown: white surface and dark selected-page text */
+/* Closed dropdown: retain dark charcoal box, force selected text white */
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    border: 1px solid #D5E2E8 !important;
+    background: #2D2A27 !important;
+    background-color: #2D2A27 !important;
+    border: 1px solid #514C46 !important;
     border-radius: 10px !important;
     min-height: 44px !important;
 }
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
-.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div {
-    color: #183247 !important;
-    -webkit-text-fill-color: #183247 !important;
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
+.stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] p {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }
 .stApp [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
-    color: #183247 !important;
-    fill: #183247 !important;
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+    opacity: 1 !important;
 }
 
-/* Open dropdown: white menu and dark option labels */
+/* Open dropdown: dark menu with white labels */
 body div[data-baseweb="popover"] [role="listbox"],
 body div[data-baseweb="popover"] [role="option"],
 body div[data-baseweb="popover"] [role="option"] * {
-    background-color: #FFFFFF !important;
-    color: #183247 !important;
-    -webkit-text-fill-color: #183247 !important;
+    background-color: #2D2A27 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }
 body div[data-baseweb="popover"] [role="option"]:hover,
 body div[data-baseweb="popover"] [role="option"][aria-selected="true"] {
-    background-color: #EAF3F5 !important;
-    color: #087C75 !important;
-    -webkit-text-fill-color: #087C75 !important;
+    background-color: #49443E !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }
 
 /* Keep the field label legible on the pale sidebar */
