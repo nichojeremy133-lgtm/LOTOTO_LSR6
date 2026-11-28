@@ -348,15 +348,127 @@ body [role="listbox"] [role="option"][aria-selected="true"] {
     -webkit-text-fill-color: #FFFFFF !important;
 }
 
-.stApp [data-testid="stMain"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-[data-testid="stTextInput"] input,
-[data-testid="stTextArea"] textarea,
-[data-testid="stNumberInput"] input,
-[data-testid="stDateInput"] input,
-[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-    background: #fff !important;
-    border-color: #d7e3e9 !important;
+/* ==========================================================
+   START LOTOTO + MAIN WORKSPACE FORM CONTROLS
+   Match the light sign-in fields: white surfaces, dark text.
+   Sidebar navigation is intentionally excluded.
+   ========================================================== */
+
+/* Text, number, date and text-area field shells */
+.stApp [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stNumberInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stDateInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stTextArea"] textarea,
+.stApp [data-testid="stMain"] div[data-baseweb="input"],
+.stApp [data-testid="stMain"] div[data-baseweb="base-input"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #C8D7DE !important;
     border-radius: 11px !important;
+    box-shadow: none !important;
+}
+
+/* Typed values and caret */
+.stApp [data-testid="stMain"] input,
+.stApp [data-testid="stMain"] textarea,
+.stApp [data-testid="stMain"] [data-baseweb="input"] input,
+.stApp [data-testid="stMain"] [data-baseweb="base-input"] input {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    caret-color: #168B83 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
+
+/* Selectbox + multiselect: white closed field, dark selected value */
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"],
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"],
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #C8D7DE !important;
+    border-radius: 11px !important;
+    box-shadow: none !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"],
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] *,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [role="combobox"],
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [role="combobox"] *,
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] span {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] svg,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] svg {
+    color: #456173 !important;
+    fill: #456173 !important;
+}
+
+/* Dropdown popup: white menu with dark readable option labels */
+body [data-baseweb="popover"] [role="option"],
+body [data-baseweb="popover"] [role="option"] *,
+body [data-baseweb="menu"] [role="option"],
+body [data-baseweb="menu"] [role="option"] *,
+body [role="listbox"] [role="option"],
+body [role="listbox"] [role="option"] * {
+    background-color: #FFFFFF !important;
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+    opacity: 1 !important;
+}
+body [data-baseweb="popover"] [role="option"]:hover,
+body [data-baseweb="popover"] [role="option"][aria-selected="true"],
+body [data-baseweb="menu"] [role="option"]:hover,
+body [data-baseweb="menu"] [role="option"][aria-selected="true"],
+body [role="listbox"] [role="option"]:hover,
+body [role="listbox"] [role="option"][aria-selected="true"] {
+    background-color: #EAF3F5 !important;
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+}
+
+/* File uploader: replace dark upload panels with clean white cards */
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"],
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] section,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] section > div,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #C8D7DE !important;
+    border-radius: 11px !important;
+    color: #183247 !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] *,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] small,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] span {
+    color: #456173 !important;
+    -webkit-text-fill-color: #456173 !important;
+    opacity: 1 !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] button {
+    background: #EAF3F5 !important;
+    color: #183247 !important;
+    border: 1px solid #C8D7DE !important;
+    border-radius: 9px !important;
+}
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] button * {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+}
+
+/* Consistent teal focus ring */
+.stApp [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
+.stApp [data-testid="stMain"] [data-testid="stNumberInput"] [data-baseweb="input"]:focus-within,
+.stApp [data-testid="stMain"] [data-testid="stDateInput"] [data-baseweb="input"]:focus-within,
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"]:focus-within,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"]:focus-within {
+    border-color: #168B83 !important;
+    box-shadow: 0 0 0 2px rgba(22,139,131,.14) !important;
 }
 .stButton > button, .stFormSubmitButton > button {
     border-radius: 11px;
