@@ -349,15 +349,19 @@ body [role="listbox"] [role="option"][aria-selected="true"] {
 }
 
 /* ==========================================================
-   START LOTOTO + MAIN WORKSPACE FORM CONTROLS
-   Match the light sign-in fields: white surfaces, dark text.
-   Sidebar navigation is intentionally excluded.
+   START LOTOTO — FORCE ALL FORM BOXES TO WHITE
+   Replace dark Streamlit/BaseWeb widget surfaces, not the sidebar.
    ========================================================== */
 
-/* Text, number, date and text-area field shells */
+/* Text, number, date and time input outer shells + inner surfaces */
 .stApp [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"] > div,
 .stApp [data-testid="stMain"] [data-testid="stNumberInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stNumberInput"] [data-baseweb="input"] > div,
 .stApp [data-testid="stMain"] [data-testid="stDateInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stDateInput"] [data-baseweb="input"] > div,
+.stApp [data-testid="stMain"] [data-testid="stTimeInput"] [data-baseweb="input"],
+.stApp [data-testid="stMain"] [data-testid="stTimeInput"] [data-baseweb="input"] > div,
 .stApp [data-testid="stMain"] [data-testid="stTextArea"] textarea,
 .stApp [data-testid="stMain"] div[data-baseweb="input"],
 .stApp [data-testid="stMain"] div[data-baseweb="base-input"] {
@@ -368,37 +372,38 @@ body [role="listbox"] [role="option"][aria-selected="true"] {
     box-shadow: none !important;
 }
 
-/* Typed values and caret */
+/* Typed text stays dark and readable */
+.stApp [data-testid="stMain"] [data-testid="stTextInput"] input,
+.stApp [data-testid="stMain"] [data-testid="stNumberInput"] input,
+.stApp [data-testid="stMain"] [data-testid="stDateInput"] input,
+.stApp [data-testid="stMain"] [data-testid="stTimeInput"] input,
+.stApp [data-testid="stMain"] [data-testid="stTextArea"] textarea,
 .stApp [data-testid="stMain"] input,
-.stApp [data-testid="stMain"] textarea,
-.stApp [data-testid="stMain"] [data-baseweb="input"] input,
-.stApp [data-testid="stMain"] [data-baseweb="base-input"] input {
+.stApp [data-testid="stMain"] textarea {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
     caret-color: #168B83 !important;
-    background: transparent !important;
-    background-color: transparent !important;
     opacity: 1 !important;
-    font-weight: 600 !important;
     text-shadow: none !important;
 }
 
-/* Selectbox + multiselect: white closed field, dark selected value */
+/* Selectbox / multiselect: make both outer and inner BaseWeb boxes white */
 .stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"],
 .stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] > div > div,
 .stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"],
-.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"] > div > div {
     background: #FFFFFF !important;
     background-color: #FFFFFF !important;
     border: 1px solid #C8D7DE !important;
     border-radius: 11px !important;
     box-shadow: none !important;
 }
-.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"],
-.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] *,
-.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [role="combobox"],
-.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] [role="combobox"] *,
-.stApp [data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] span {
+.stApp [data-testid="stMain"] [data-testid="stSelectbox"] *,
+.stApp [data-testid="stMain"] [data-testid="stMultiSelect"] * {
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
     opacity: 1 !important;
@@ -407,15 +412,20 @@ body [role="listbox"] [role="option"][aria-selected="true"] {
 .stApp [data-testid="stMain"] [data-testid="stMultiSelect"] svg {
     color: #456173 !important;
     fill: #456173 !important;
+    stroke: #456173 !important;
 }
 
-/* Dropdown popup: white menu with dark readable option labels */
+/* Dropdown options: white menu, dark text */
+body [data-baseweb="popover"],
+body [data-baseweb="popover"] [role="listbox"],
 body [data-baseweb="popover"] [role="option"],
 body [data-baseweb="popover"] [role="option"] *,
+body [data-baseweb="menu"],
 body [data-baseweb="menu"] [role="option"],
 body [data-baseweb="menu"] [role="option"] *,
 body [role="listbox"] [role="option"],
 body [role="listbox"] [role="option"] * {
+    background: #FFFFFF !important;
     background-color: #FFFFFF !important;
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
@@ -427,36 +437,52 @@ body [data-baseweb="menu"] [role="option"]:hover,
 body [data-baseweb="menu"] [role="option"][aria-selected="true"],
 body [role="listbox"] [role="option"]:hover,
 body [role="listbox"] [role="option"][aria-selected="true"] {
+    background: #EAF3F5 !important;
     background-color: #EAF3F5 !important;
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
 }
 
-/* File uploader: replace dark upload panels with clean white cards */
+/* File uploader dropzone: force the entire dark panel to white */
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"],
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] > div,
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"] section,
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"] section > div,
-.stApp [data-testid="stMain"] [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"],
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] > div {
     background: #FFFFFF !important;
     background-color: #FFFFFF !important;
     border: 1px solid #C8D7DE !important;
     border-radius: 11px !important;
-    color: #183247 !important;
+    color: #456173 !important;
+    box-shadow: none !important;
 }
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"] *,
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"] small,
-.stApp [data-testid="stMain"] [data-testid="stFileUploader"] span {
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] span,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] p {
     color: #456173 !important;
     -webkit-text-fill-color: #456173 !important;
     opacity: 1 !important;
 }
 .stApp [data-testid="stMain"] [data-testid="stFileUploader"] button {
     background: #EAF3F5 !important;
+    background-color: #EAF3F5 !important;
     color: #183247 !important;
     border: 1px solid #C8D7DE !important;
     border-radius: 9px !important;
 }
-.stApp [data-testid="stMain"] [data-testid="stFileUploader"] button * {
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] button *,
+.stApp [data-testid="stMain"] [data-testid="stFileUploader"] button span {
+    color: #183247 !important;
+    -webkit-text-fill-color: #183247 !important;
+}
+
+/* Keep ordinary main-page form widgets white, while sidebar menu stays dark */
+.stApp [data-testid="stMain"] [data-testid="stTextInput"] [data-baseweb="input"] *,
+.stApp [data-testid="stMain"] [data-testid="stNumberInput"] [data-baseweb="input"] *,
+.stApp [data-testid="stMain"] [data-testid="stDateInput"] [data-baseweb="input"] * {
+    background-color: transparent !important;
     color: #183247 !important;
     -webkit-text-fill-color: #183247 !important;
 }
